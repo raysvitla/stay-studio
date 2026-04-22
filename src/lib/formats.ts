@@ -39,7 +39,7 @@ export const FORMATS: FormatCatalogEntry[] = [
   { id: "gads-mrec", label: "Medium Rectangle", category: "google-youtube", sub: "300 × 250", w: 300, h: 250, ratio: "1.2:1", status: "planned" },
   { id: "gads-halfpage", label: "Half Page", category: "google-youtube", sub: "300 × 600", w: 300, h: 600, ratio: "1:2", status: "planned" },
   { id: "gads-mobile", label: "Mobile Banner", category: "google-youtube", sub: "320 × 100", w: 320, h: 100, ratio: "3.2:1", status: "planned" },
-  { id: "yt-thumbnail", label: "YouTube Thumbnail", category: "google-youtube", sub: "1280 × 720", w: 1280, h: 720, ratio: "16:9", status: "planned" },
+  { id: "yt-thumbnail", label: "YouTube Thumbnail", category: "google-youtube", sub: "1280 × 720", w: 1280, h: 720, ratio: "16:9", status: "ready" },
   { id: "yt-endcard", label: "YouTube End Card", category: "google-youtube", sub: "1920 × 1080", w: 1920, h: 1080, ratio: "16:9", status: "planned" },
 
   // ── Email / misc ──────────────────────────────────────────────────────

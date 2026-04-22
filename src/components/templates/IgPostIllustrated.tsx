@@ -83,7 +83,7 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: content.illusAccent || "#EBE1FF",
+              background: illus.isCustom ? "transparent" : (content.illusAccent || "#EBE1FF"),
               borderRadius: 28,
               padding: illus.isCustom ? 0 : 28,
               alignSelf: "stretch",

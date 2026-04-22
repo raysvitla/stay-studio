@@ -65,7 +65,7 @@ export default function LiPostSplit({ c, state }: TemplateRenderProps) {
       <div
         style={{
           flex: 0.9,
-          background: content.illusAccent || c.accent,
+          background: illus?.isCustom ? c.bg : (content.illusAccent || c.accent),
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

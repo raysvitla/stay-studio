@@ -6,11 +6,7 @@ export type PaletteKey =
   | "lime"
   | "blue"
   | "dark"
-  | "white"
-  | "mint"
-  | "peach"
-  | "rose"
-  | "sand";
+  | "white";
 
 export type LogoVariant = "dark" | "white" | "lime" | "blue" | "yellow";
 
@@ -73,6 +69,8 @@ export interface DesignContent {
   photoUrl: string | null;
   /** User-uploaded custom illustration (data URL) — overrides `illustration` when set. */
   customIllustration?: string | null;
+  /** Small accent label on YouTube thumbnails (e.g. "2025", "EP. 3"). */
+  accentText?: string | null;
 }
 
 /** A single slide inside a carousel design. Each slide has its own content. */

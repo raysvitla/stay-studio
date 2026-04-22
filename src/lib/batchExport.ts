@@ -29,9 +29,15 @@ interface RenderedFrame {
   dataUrl: string;
 }
 
+export interface ExportOptions {
+  /** 1 = native size, 2 = retina/HD (default). Caller controls this via the
+   * "HD export" toggle in Controls. */
+  pixelRatio?: number;
+}
+
 /** Mount an off-screen container and render a single design frame at full
  * resolution, snapshot as PNG, unmount. Returns a data URL. */
-async function renderFrame(design: Design, slideIndex: number | undefined): Promise<string> {
+async function renderFrame(design: Design, slideIndex: number | undefined, pixelRatio = 2): Promise<string> {
   const fmt = getFormat(design.format);
   const scheme = getColorScheme(design.color);
   const Template = getTemplate(design.format, design.style);
@@ -66,7 +72,7 @@ async function renderFrame(design: Design, slideIndex: number | undefined): Prom
     const dataUrl = await toPng(inner, {
       width: fmt.w,
       height: fmt.h,
-      pixelRatio: 1,
+      pixelRatio,
       cacheBust: true,
     });
     return dataUrl;
@@ -101,16 +107,17 @@ function slug(s: string): string {
 }
 
 /** Export a carousel design: one PNG per slide, bundled into a ZIP. */
-export async function exportCarousel(design: Design): Promise<void> {
+export async function exportCarousel(design: Design, opts: ExportOptions = {}): Promise<void> {
   if (!isCarouselFormat(design.format)) {
     throw new Error("Design is not a carousel");
   }
   const slides = design.slides ?? [];
   if (slides.length === 0) throw new Error("Carousel has no slides");
+  const pr = opts.pixelRatio ?? 2;
 
   const frames: RenderedFrame[] = [];
   for (let i = 0; i < slides.length; i++) {
-    const dataUrl = await renderFrame(design, i);
+    const dataUrl = await renderFrame(design, i, pr);
     frames.push({ name: `carousel-${String(i + 1).padStart(2, "0")}.png`, dataUrl });
   }
 
@@ -123,15 +130,16 @@ export async function exportCarousel(design: Design): Promise<void> {
 /** Render the current design into EVERY ready format (keeping style mapping
  * best-effort) and bundle into a ZIP. Carousel format is skipped because it
  * needs multi-slide data; include only single-image formats. */
-export async function exportAllFormats(design: Design): Promise<void> {
+export async function exportAllFormats(design: Design, opts: ExportOptions = {}): Promise<void> {
   const formats = readyFormats().filter((f) => !isCarouselFormat(f.id));
   const zip = new JSZip();
+  const pr = opts.pixelRatio ?? 2;
 
   for (const f of formats) {
     // Use the first available style for that format; fall back keeps original style.
     const clone: Design = { ...design, format: f.id };
     try {
-      const dataUrl = await renderFrame(clone, undefined);
+      const dataUrl = await renderFrame(clone, undefined, pr);
       zip.file(`${f.id}.png`, dataUrlToBlob(dataUrl));
     } catch (err) {
       console.warn(`Failed to render ${f.id}:`, err);
@@ -143,9 +151,10 @@ export async function exportAllFormats(design: Design): Promise<void> {
 }
 
 /** Export a list of saved designs as a single ZIP — one PNG per design. */
-export async function exportSavedDesigns(designs: Design[]): Promise<void> {
+export async function exportSavedDesigns(designs: Design[], opts: ExportOptions = {}): Promise<void> {
   if (designs.length === 0) return;
   const zip = new JSZip();
+  const pr = opts.pixelRatio ?? 2;
 
   for (const d of designs) {
     if (isCarouselFormat(d.format) && d.slides && d.slides.length > 0) {
@@ -153,11 +162,11 @@ export async function exportSavedDesigns(designs: Design[]): Promise<void> {
       const folder = zip.folder(slug(d.name) || d.id);
       if (!folder) continue;
       for (let i = 0; i < d.slides.length; i++) {
-        const dataUrl = await renderFrame(d, i);
+        const dataUrl = await renderFrame(d, i, pr);
         folder.file(`slide-${String(i + 1).padStart(2, "0")}.png`, dataUrlToBlob(dataUrl));
       }
     } else {
-      const dataUrl = await renderFrame(d, undefined);
+      const dataUrl = await renderFrame(d, undefined, pr);
       zip.file(`${slug(d.name)}-${d.format}.png`, dataUrlToBlob(dataUrl));
     }
   }

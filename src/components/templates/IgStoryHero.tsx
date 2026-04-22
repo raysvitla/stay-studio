@@ -33,8 +33,8 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
               display: "flex",
               justifyContent: "center",
               marginBottom: 60,
-              background: content.illusAccent || "transparent",
-              borderRadius: content.illusAccent ? 32 : 0,
+              background: illus.isCustom ? "transparent" : (content.illusAccent || "transparent"),
+              borderRadius: illus.isCustom ? 24 : (content.illusAccent ? 32 : 0),
               padding: illus.isCustom ? 0 : (content.illusAccent ? 32 : 0),
               overflow: "hidden",
             }}

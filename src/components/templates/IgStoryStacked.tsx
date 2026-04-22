@@ -12,7 +12,7 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
       <div
         style={{
           flex: 1,
-          background: content.illusAccent || c.accent,
+          background: illus?.isCustom ? c.bg : (content.illusAccent || c.accent),
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

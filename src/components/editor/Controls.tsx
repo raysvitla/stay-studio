@@ -23,6 +23,8 @@ export default function Controls({
   setShowSafeZone,
   activeSlide,
   setActiveSlide,
+  hdExport,
+  setHdExport,
 }: {
   design: Design;
   setDesign: (updater: (d: Design) => Design) => void;
@@ -34,11 +36,17 @@ export default function Controls({
   setShowSafeZone: (v: boolean) => void;
   activeSlide: number;
   setActiveSlide: (idx: number) => void;
+  hdExport: boolean;
+  setHdExport: (v: boolean) => void;
 }) {
   const fmt = getFormat(design.format);
   const styles = getStyles(design.format);
   const safeZoneApplies = Boolean(fmt.safeZone);
   const isCarousel = isCarouselFormat(design.format);
+  const currentStyleFields = styles.find((s) => s.id === design.style)?.fields ?? [];
+  const showIllustrationSection = (currentStyleFields as ReadonlyArray<string>).includes("illustration");
+  const showPersonPhotoSection = (currentStyleFields as ReadonlyArray<string>).includes("photoUrl");
+  const showAccentTextSection = (currentStyleFields as ReadonlyArray<string>).includes("accentText");
 
   // The content the user is currently editing: either the main design or the
   // active slide of a carousel.
@@ -322,8 +330,33 @@ export default function Controls({
           </div>
         )}
 
+        {/* Person photo (used by YouTube thumbnail and similar templates) */}
+        {showPersonPhotoSection && (
+          <div style={group}>
+            <div style={groupLabel}>Person photo</div>
+            <PersonPhotoUploader
+              value={editedContent.photoUrl ?? null}
+              onChange={(url) => setContent("photoUrl", url)}
+            />
+          </div>
+        )}
+
+        {/* Accent text badge (YouTube thumbnails) */}
+        {showAccentTextSection && (
+          <div style={group}>
+            <div style={groupLabel}>Accent badge</div>
+            <input
+              value={editedContent.accentText ?? ""}
+              onChange={(e) => setContent("accentText", e.target.value || null)}
+              style={inputStyle}
+              placeholder="2025 · EP. 3 · NEW"
+              maxLength={12}
+            />
+          </div>
+        )}
+
         {/* Illustration picker */}
-        {design.style !== "bold" && (
+        {showIllustrationSection && (
           <div style={group}>
             <div style={groupLabel}>Illustration</div>
 
@@ -388,6 +421,12 @@ export default function Controls({
             Show ad safe zone
           </label>
         )}
+
+        {/* HD export toggle */}
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 10, cursor: "pointer" }}>
+          <input type="checkbox" checked={hdExport} onChange={(e) => setHdExport(e.target.checked)} />
+          HD export (2× pixel ratio)
+        </label>
 
         {/* Download */}
         <button onClick={onDownload} disabled={downloading} style={{ ...downloadBtn, opacity: downloading ? 0.6 : 1 }}>
@@ -657,49 +696,97 @@ function SavedDesignsPanel({
   );
 }
 
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2MB — keeps us under localStorage quota.
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB raw input; normalizer shrinks before storage.
 
-function CustomIllustrationUploader({
+function ImageUploader({
   value,
   onChange,
+  label,
+  hint,
 }: {
   value: string | null;
   onChange: (dataUrl: string | null) => void;
+  label: string;
+  hint?: string;
 }) {
-  const onPick = (file: File | null) => {
+  const [working, setWorking] = useState<"normalizing" | "removing-bg" | null>(null);
+  const [bgProgress, setBgProgress] = useState<number | null>(null);
+
+  const onPick = async (file: File | null) => {
     if (!file) return;
     if (file.size > MAX_UPLOAD_BYTES) {
-      window.alert("Image must be under 2MB. Try compressing it first (tinypng.com).");
+      window.alert("Image must be under 8MB. Try compressing it first (tinypng.com).");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === "string") onChange(result);
-    };
-    reader.onerror = () => window.alert("Couldn't read that file. Try another image.");
-    reader.readAsDataURL(file);
+    setWorking("normalizing");
+    try {
+      const { normalizeUploadedImage } = await import("@/lib/imageUtils");
+      const url = await normalizeUploadedImage(file);
+      onChange(url);
+    } catch (e) {
+      window.alert(`Couldn't read that file: ${(e as Error).message}`);
+    } finally {
+      setWorking(null);
+    }
   };
+
+  const onRemoveBg = async () => {
+    if (!value) return;
+    setWorking("removing-bg");
+    setBgProgress(0);
+    try {
+      const { removeImageBackground } = await import("@/lib/bgRemoval");
+      const url = await removeImageBackground(value, (p) => setBgProgress(p));
+      onChange(url);
+    } catch (e) {
+      window.alert(`Background removal failed: ${(e as Error).message}`);
+    } finally {
+      setWorking(null);
+      setBgProgress(null);
+    }
+  };
+
   return (
     <div style={{ marginBottom: 10 }}>
       {value ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 6, border: "1.5px solid rgba(60,60,60,0.15)", borderRadius: 8 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="Your upload" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: "#3C3C3C", flex: 1 }}>Your custom image</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 6, border: "1.5px solid rgba(60,60,60,0.15)", borderRadius: 8 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt="Your upload" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0, background: "repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/8px 8px" }} />
+            <span style={{ fontSize: 12, color: "#3C3C3C", flex: 1 }}>{label}</span>
+            <button
+              onClick={() => onChange(null)}
+              disabled={working !== null}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(60,60,60,0.18)",
+                borderRadius: 6,
+                fontSize: 11,
+                padding: "4px 8px",
+                cursor: working ? "not-allowed" : "pointer",
+                color: "#3C3C3C",
+              }}
+            >
+              Remove
+            </button>
+          </div>
           <button
-            onClick={() => onChange(null)}
+            onClick={onRemoveBg}
+            disabled={working !== null}
             style={{
-              background: "transparent",
-              border: "1px solid rgba(60,60,60,0.18)",
-              borderRadius: 6,
-              fontSize: 11,
-              padding: "4px 8px",
-              cursor: "pointer",
+              padding: "8px 10px",
+              border: "1.5px solid rgba(60,60,60,0.15)",
+              borderRadius: 8,
+              background: working === "removing-bg" ? "#EBE1FF" : "white",
+              fontSize: 12,
+              fontWeight: 600,
               color: "#3C3C3C",
+              cursor: working ? "not-allowed" : "pointer",
             }}
           >
-            Remove
+            {working === "removing-bg"
+              ? `✨ Removing background… ${bgProgress !== null ? `${Math.round(bgProgress * 100)}%` : ""}`
+              : "✨ Remove background"}
           </button>
         </div>
       ) : (
@@ -715,22 +802,43 @@ function CustomIllustrationUploader({
             fontSize: 12,
             fontWeight: 600,
             color: "#3C3C3C",
-            cursor: "pointer",
+            cursor: working ? "wait" : "pointer",
             background: "#FCFCFC",
           }}
         >
-          ⬆ Upload your own image
+          {working === "normalizing" ? "Processing…" : `⬆ Upload ${label.toLowerCase()}`}
           <input
             type="file"
             accept="image/png,image/jpeg,image/svg+xml,image/webp"
             onChange={(e) => onPick(e.target.files?.[0] ?? null)}
             style={{ display: "none" }}
+            disabled={working !== null}
           />
         </label>
       )}
       <div style={{ fontSize: 10, color: "rgba(60,60,60,0.45)", marginTop: 4, textAlign: "center" }}>
-        PNG, JPG, SVG, WebP — max 2MB
+        {hint ?? "PNG, JPG, SVG, WebP — max 8MB (auto-downscaled)"}
       </div>
     </div>
   );
+}
+
+function CustomIllustrationUploader({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (dataUrl: string | null) => void;
+}) {
+  return <ImageUploader value={value} onChange={onChange} label="Your custom image" />;
+}
+
+function PersonPhotoUploader({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (dataUrl: string | null) => void;
+}) {
+  return <ImageUploader value={value} onChange={onChange} label="Person photo" hint="Upload advisor / host photo — try 'Remove background' for a clean cut-out" />;
 }

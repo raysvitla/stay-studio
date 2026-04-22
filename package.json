@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
     "clsx": "2.1.1",
     "html-to-image": "1.11.13",
     "jszip": "^3.10.1",

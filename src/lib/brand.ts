@@ -13,10 +13,6 @@ export const COLORS = {
   offwhite: "#FCFCFC",
   whisper: "#EDEDED",
   charcoal: "#3C3C3C",
-  mint: "#D9F5E5",
-  peach: "#FFD6C2",
-  rose: "#FFD4E5",
-  sand: "#F2E6D0",
 } as const;
 
 /** Chromatic shades for charts / infographics (03 = darkest). */
@@ -32,10 +28,6 @@ export const COLOR_SCHEMES: ColorScheme[] = [
   { id: "yellow", name: "Yellow", bg: COLORS.yellow, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
   { id: "lime", name: "Lime", bg: COLORS.lime, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "lime" },
   { id: "blue", name: "Blue", bg: COLORS.blue, accent: COLORS.lime, text: COLORS.charcoal, logoVariant: "blue" },
-  { id: "mint", name: "Mint", bg: COLORS.mint, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
-  { id: "peach", name: "Peach", bg: COLORS.peach, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
-  { id: "rose", name: "Rose", bg: COLORS.rose, accent: COLORS.lime, text: COLORS.charcoal, logoVariant: "dark" },
-  { id: "sand", name: "Sand", bg: COLORS.sand, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
   { id: "dark", name: "Dark", bg: COLORS.charcoal, accent: COLORS.lilac, text: COLORS.white, logoVariant: "white" },
   { id: "white", name: "White", bg: COLORS.white, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
 ];
@@ -62,10 +54,6 @@ export const ILLUSTRATION_ACCENTS: Array<{ id: string; name: string }> = [
   { id: COLORS.yellow, name: "Yellow" },
   { id: COLORS.lime, name: "Lime" },
   { id: COLORS.blue, name: "Blue" },
-  { id: COLORS.mint, name: "Mint" },
-  { id: COLORS.peach, name: "Peach" },
-  { id: COLORS.rose, name: "Rose" },
-  { id: COLORS.sand, name: "Sand" },
   { id: COLORS.white, name: "White" },
   { id: COLORS.charcoal, name: "Dark" },
 ];

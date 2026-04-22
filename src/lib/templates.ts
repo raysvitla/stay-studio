@@ -16,6 +16,7 @@ import LiPostSplit from "@/components/templates/LiPostSplit";
 import LiPostBold from "@/components/templates/LiPostBold";
 import LiBannerClean from "@/components/templates/LiBannerClean";
 import CarouselSlide from "@/components/templates/CarouselSlide";
+import YtThumbnailAdvisor from "@/components/templates/YtThumbnailAdvisor";
 
 const SHARED_FIELDS_CORE = ["headline", "body", "cta", "url"] as const;
 
@@ -72,6 +73,9 @@ export const STYLES: Record<string, StyleSpec[]> = {
     { id: "split", label: "Split", component: "LiPostSplit", fields: [...SHARED_FIELDS_CORE, "illustration", "illusAccent"] },
     { id: "bold", label: "Bold", component: "LiPostBold", fields: [...SHARED_FIELDS_CORE] },
   ],
+  "yt-thumbnail": [
+    { id: "advisor", label: "Advisor + Headline", component: "YtThumbnailAdvisor", fields: ["headline", "body", "url", "photoUrl", "illusAccent", "accentText"] },
+  ],
 };
 
 const TEMPLATE_MAP: Record<string, ComponentType<TemplateRenderProps>> = {
@@ -101,6 +105,7 @@ const TEMPLATE_MAP: Record<string, ComponentType<TemplateRenderProps>> = {
   "ig-carousel--slide": CarouselSlide,
   "og-image--split": LiPostSplit,
   "og-image--bold": LiPostBold,
+  "yt-thumbnail--advisor": YtThumbnailAdvisor,
 };
 
 export function getTemplate(format: string, style: string): ComponentType<TemplateRenderProps> {

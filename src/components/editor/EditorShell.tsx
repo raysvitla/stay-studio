@@ -84,6 +84,7 @@ export default function EditorShell() {
   const [downloading, setDownloading] = useState(false);
   const [showSafeZone, setShowSafeZone] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [hdExport, setHdExport] = useState(true);
   const previewRef = useRef<PreviewHandle>(null);
 
   // After mount: either restore from localStorage, or pick a random fresh
@@ -137,7 +138,7 @@ export default function EditorShell() {
       // Carousels export as a ZIP of every slide — that's what users actually
       // need when uploading to Instagram or Ads Manager.
       if (isCarouselFormat(design.format)) {
-        await exportCarousel(design);
+        await exportCarousel(design, { pixelRatio: hdExport ? 2 : 1 });
         return;
       }
 
@@ -153,7 +154,7 @@ export default function EditorShell() {
         const dataUrl = await toPng(el, {
           width: fmt.w,
           height: fmt.h,
-          pixelRatio: 1,
+          pixelRatio: hdExport ? 2 : 1,
           cacheBust: true,
         });
         const a = document.createElement("a");
@@ -170,33 +171,33 @@ export default function EditorShell() {
     } finally {
       setDownloading(false);
     }
-  }, [design, downloading]);
+  }, [design, downloading, hdExport]);
 
   const handleDownloadAllFormats = useCallback(async () => {
     if (downloading) return;
     setDownloading(true);
     try {
-      await exportAllFormats(design);
+      await exportAllFormats(design, { pixelRatio: hdExport ? 2 : 1 });
     } catch (e) {
       console.error(e);
       window.alert(`Export failed: ${(e as Error).message}`);
     } finally {
       setDownloading(false);
     }
-  }, [design, downloading]);
+  }, [design, downloading, hdExport]);
 
   const handleDownloadSaved = useCallback(async (designs: Design[]) => {
     if (downloading) return;
     setDownloading(true);
     try {
-      await exportSavedDesigns(designs);
+      await exportSavedDesigns(designs, { pixelRatio: hdExport ? 2 : 1 });
     } catch (e) {
       console.error(e);
       window.alert(`Export failed: ${(e as Error).message}`);
     } finally {
       setDownloading(false);
     }
-  }, [downloading]);
+  }, [downloading, hdExport]);
 
   const updater = useCallback(
     (fn: (d: Design) => Design) => setDesign((prev) => fn(prev)),
@@ -216,6 +217,8 @@ export default function EditorShell() {
         setShowSafeZone={setShowSafeZone}
         activeSlide={activeSlide}
         setActiveSlide={setActiveSlide}
+        hdExport={hdExport}
+        setHdExport={setHdExport}
       />
       <Preview
         ref={previewRef}
