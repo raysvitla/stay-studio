@@ -1,0 +1,87 @@
+// Stay Studio — IG Post / Square — Statement layout
+// Big uppercase headline, small body + CTA, URL in corner.
+
+import type { TemplateRenderProps } from "@/types";
+import { logoSrc } from "@/lib/brand";
+
+export default function IgPostStatement({ c, state }: TemplateRenderProps) {
+  const { content } = state;
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        background: c.bg,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: 80,
+        boxSizing: "border-box",
+        overflow: "hidden",
+      }}
+    >
+      {/* Logo */}
+      <img
+        src={logoSrc(c.logoVariant)}
+        alt="Stay"
+        style={{ height: 42, width: "auto", objectFit: "contain", alignSelf: "flex-start", flexShrink: 0 }}
+      />
+
+      {/* Headline */}
+      <div
+        style={{
+          fontFamily: "'Mukta', sans-serif",
+          fontWeight: 400,
+          fontSize: 108,
+          letterSpacing: "-0.05em",
+          textTransform: "uppercase",
+          color: c.text,
+          lineHeight: 1.08,
+          flex: 1,
+          paddingTop: 48,
+          paddingBottom: 48,
+          whiteSpace: "pre-wrap",
+        }}
+      >
+        {content.headline || "German bureaucracy is hard."}
+      </div>
+
+      {/* Body + CTA + URL */}
+      <div style={{ flexShrink: 0 }}>
+        {content.body && (
+          <div
+            style={{
+              fontFamily: "'Arimo', sans-serif",
+              fontSize: 32,
+              color: c.text,
+              opacity: 0.65,
+              lineHeight: 1.5,
+              maxWidth: 680,
+              marginBottom: 28,
+            }}
+          >
+            {content.body}
+          </div>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          {content.cta && (
+            <div style={{ fontFamily: "'Arimo', sans-serif", fontWeight: 700, fontSize: 28, color: c.text }}>
+              {content.cta}
+            </div>
+          )}
+          <div
+            style={{
+              fontFamily: "'Arimo', sans-serif",
+              fontSize: 22,
+              color: c.text,
+              opacity: 0.45,
+              marginLeft: "auto",
+            }}
+          >
+            {content.url || "stayinsured.de"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

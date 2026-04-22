@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --charcoal: #3C3C3C;
+  --offwhite: #FCFCFC;
+  --whisper: #EDEDED;
+  --lilac: #EBE1FF;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--offwhite);
+  color: var(--charcoal);
+  font-family: 'Arimo', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Thin scrollbar in the controls panel */
+.stay-scrollbar::-webkit-scrollbar { width: 6px; }
+.stay-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(60, 60, 60, 0.2);
+  border-radius: 99px;
+}

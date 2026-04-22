@@ -1,0 +1,736 @@
+"use client";
+
+// Stay Studio — controls panel
+// The form the user interacts with to customise the design.
+
+import { useEffect, useState } from "react";
+import type { CarouselSlide, Design, DesignContent, PaletteKey } from "@/types";
+import { CATEGORY_LABELS, FORMATS, getFormat, isCarouselFormat } from "@/lib/formats";
+import { getStyles } from "@/lib/templates";
+import { COLOR_SCHEMES, ILLUSTRATIONS, ILLUSTRATION_ACCENTS, illusSrc } from "@/lib/brand";
+import { deleteDesign, listDesigns, saveDesign } from "@/lib/storage";
+
+const MAX_SLIDES = 10;
+
+export default function Controls({
+  design,
+  setDesign,
+  onDownload,
+  onDownloadAllFormats,
+  onDownloadSaved,
+  downloading,
+  showSafeZone,
+  setShowSafeZone,
+  activeSlide,
+  setActiveSlide,
+}: {
+  design: Design;
+  setDesign: (updater: (d: Design) => Design) => void;
+  onDownload: () => void;
+  onDownloadAllFormats: () => void;
+  onDownloadSaved: (designs: Design[]) => void;
+  downloading: boolean;
+  showSafeZone: boolean;
+  setShowSafeZone: (v: boolean) => void;
+  activeSlide: number;
+  setActiveSlide: (idx: number) => void;
+}) {
+  const fmt = getFormat(design.format);
+  const styles = getStyles(design.format);
+  const safeZoneApplies = Boolean(fmt.safeZone);
+  const isCarousel = isCarouselFormat(design.format);
+
+  // The content the user is currently editing: either the main design or the
+  // active slide of a carousel.
+  const editedContent: DesignContent = isCarousel && design.slides?.[activeSlide]
+    ? design.slides[activeSlide].content
+    : design.content;
+
+  const set = <K extends keyof Design>(key: K, val: Design[K]) =>
+    setDesign((d) => ({ ...d, [key]: val, updatedAt: Date.now() }));
+
+  const setContent = <K extends keyof DesignContent>(key: K, val: DesignContent[K]) => {
+    if (isCarousel && design.slides) {
+      setDesign((d) => {
+        const slides = (d.slides ?? []).map((s, i) =>
+          i === activeSlide ? { ...s, content: { ...s.content, [key]: val } } : s
+        );
+        return { ...d, slides, updatedAt: Date.now() };
+      });
+    } else {
+      setDesign((d) => ({ ...d, content: { ...d.content, [key]: val }, updatedAt: Date.now() }));
+    }
+  };
+
+  const addSlide = () => {
+    setDesign((d) => {
+      const slides = d.slides ?? [];
+      if (slides.length >= MAX_SLIDES) return d;
+      const base = slides[slides.length - 1]?.content ?? d.content;
+      const newSlide: CarouselSlide = {
+        id: `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+        content: { ...base, headline: "New slide", body: "", cta: "" },
+      };
+      return { ...d, slides: [...slides, newSlide], updatedAt: Date.now() };
+    });
+    setActiveSlide((design.slides?.length ?? 0));
+  };
+
+  const removeSlide = (idx: number) => {
+    setDesign((d) => {
+      const slides = (d.slides ?? []).filter((_, i) => i !== idx);
+      return { ...d, slides, updatedAt: Date.now() };
+    });
+    setActiveSlide(Math.max(0, idx - 1));
+  };
+
+  const groupedByCategory = FORMATS.reduce<Record<string, typeof FORMATS>>((acc, f) => {
+    (acc[f.category] ||= []).push(f);
+    return acc;
+  }, {});
+
+  return (
+    <div className="stay-scrollbar" style={{ width: 320, flexShrink: 0, background: "#FFFFFF", borderRight: "1px solid rgba(60,60,60,0.08)", height: "100vh", overflowY: "auto" }}>
+      <div style={{ padding: 18 }}>
+        {/* Format */}
+        <div style={group}>
+          <div style={groupLabel}>Format</div>
+          {Object.entries(groupedByCategory).map(([cat, list]) => (
+            <div key={cat} style={{ marginBottom: 10 }}>
+              <div style={categoryLabel}>{CATEGORY_LABELS[cat] ?? cat}</div>
+              {list.map((f) => {
+                const disabled = f.status !== "ready";
+                const active = design.format === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    disabled={disabled}
+                    onClick={() => {
+                      const firstStyle = getStyles(f.id)[0]?.id ?? "";
+                      setDesign((d) => ({ ...d, format: f.id, style: firstStyle, updatedAt: Date.now() }));
+                    }}
+                    style={{
+                      ...formatBtn,
+                      ...(active ? formatBtnActive : {}),
+                      opacity: disabled ? 0.35 : 1,
+                      cursor: disabled ? "not-allowed" : "pointer",
+                    }}
+                    title={disabled ? "Not ready in this phase" : f.sub}
+                  >
+                    <span style={formatName}>{f.label}</span>
+                    <span style={formatSub}>{f.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Layout / style */}
+        {styles.length > 1 && (
+          <div style={group}>
+            <div style={groupLabel}>Layout</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {styles.map((st) => (
+                <button
+                  key={st.id}
+                  onClick={() => set("style", st.id)}
+                  style={{ ...styleBtn, ...(design.style === st.id ? styleBtnActive : {}) }}
+                >
+                  {st.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Carousel slide manager */}
+        {isCarousel && design.slides && (
+          <div style={group}>
+            <div style={groupLabel}>
+              Slides · editing {activeSlide + 1}/{design.slides.length}
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+              {design.slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveSlide(i)}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 7,
+                    fontFamily: "'Arimo',sans-serif",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    border: `1.5px solid ${activeSlide === i ? "#3C3C3C" : "rgba(60,60,60,0.15)"}`,
+                    background: activeSlide === i ? "#3C3C3C" : "white",
+                    color: activeSlide === i ? "white" : "#3C3C3C",
+                  }}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              {design.slides.length < MAX_SLIDES && (
+                <button
+                  onClick={addSlide}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 7,
+                    border: "1.5px dashed rgba(60,60,60,0.25)",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontSize: 18,
+                    color: "#3C3C3C",
+                  }}
+                  title="Add slide"
+                >
+                  +
+                </button>
+              )}
+            </div>
+            {design.slides.length > 1 && (
+              <button
+                onClick={() => removeSlide(activeSlide)}
+                style={{
+                  fontSize: 11,
+                  color: "rgba(60,60,60,0.55)",
+                  background: "transparent",
+                  border: "none",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                Remove slide {activeSlide + 1}
+              </button>
+            )}
+            <div style={{ fontSize: 10, color: "rgba(60,60,60,0.45)", marginTop: 6, lineHeight: 1.4 }}>
+              2–10 slides. Each slide has its own text. Export bundles them as a ZIP ready for Instagram / Meta Ads Manager.
+            </div>
+          </div>
+        )}
+
+        {/* Colour */}
+        <div style={group}>
+          <div style={groupLabel}>Colour</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {COLOR_SCHEMES.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => set("color", c.id as PaletteKey)}
+                title={c.name}
+                aria-label={c.name}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: c.bg,
+                  border: `2.5px solid ${design.color === c.id ? "#3C3C3C" : "rgba(60,60,60,0.12)"}`,
+                  cursor: "pointer",
+                  padding: 0,
+                  transition: "border-color 150ms",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Headline */}
+        <div style={group}>
+          <div style={groupLabel}>Headline</div>
+          <textarea
+            value={editedContent.headline}
+            onChange={(e) => setContent("headline", e.target.value)}
+            style={textareaStyle}
+            rows={3}
+            placeholder="Your headline here…"
+          />
+        </div>
+
+        {/* Body */}
+        {design.format !== "li-banner" && (
+          <div style={group}>
+            <div style={groupLabel}>Body text</div>
+            <textarea
+              value={editedContent.body}
+              onChange={(e) => setContent("body", e.target.value)}
+              style={textareaStyle}
+              rows={2}
+              placeholder="Supporting message…"
+            />
+          </div>
+        )}
+
+        {/* CTA */}
+        {design.format !== "li-banner" && (
+          <div style={group}>
+            <div style={groupLabel}>CTA</div>
+            <input
+              value={editedContent.cta}
+              onChange={(e) => setContent("cta", e.target.value)}
+              style={inputStyle}
+              placeholder="e.g. Get a free quote →"
+            />
+          </div>
+        )}
+
+        {/* Stats — only for stats style */}
+        {design.style === "stats" && (
+          <div style={group}>
+            <div style={groupLabel}>Big number</div>
+            <input
+              value={editedContent.stat}
+              onChange={(e) => setContent("stat", e.target.value)}
+              style={inputStyle}
+              placeholder="e.g. 3,000+"
+            />
+            <input
+              value={editedContent.statLabel}
+              onChange={(e) => setContent("statLabel", e.target.value)}
+              style={{ ...inputStyle, marginTop: 6 }}
+              placeholder="e.g. Clients protected"
+            />
+          </div>
+        )}
+
+        {/* Illustration accent colour */}
+        {design.style !== "bold" && design.format !== "li-banner" && editedContent.illustration !== "none" && (
+          <div style={group}>
+            <div style={groupLabel}>Illustration background</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {ILLUSTRATION_ACCENTS.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setContent("illusAccent", c.id)}
+                  title={c.name}
+                  aria-label={c.name}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 7,
+                    background: c.id,
+                    padding: 0,
+                    border: `2.5px solid ${editedContent.illusAccent === c.id ? "#3C3C3C" : "rgba(60,60,60,0.12)"}`,
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Illustration picker */}
+        {design.style !== "bold" && (
+          <div style={group}>
+            <div style={groupLabel}>Illustration</div>
+
+            {/* Custom upload — takes precedence over brand illustrations. */}
+            <CustomIllustrationUploader
+              value={editedContent.customIllustration ?? null}
+              onChange={(url) => setContent("customIllustration", url)}
+            />
+
+            {/* Hide the brand grid when the user has uploaded their own; keeps
+             * intent clear (one source of truth per design). */}
+            {!editedContent.customIllustration && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
+                {ILLUSTRATIONS.map((il) => (
+                  <button
+                    key={il.id}
+                    onClick={() => setContent("illustration", il.id)}
+                    style={{
+                      border: `2px solid ${editedContent.illustration === il.id ? "#3C3C3C" : "rgba(60,60,60,0.10)"}`,
+                      borderRadius: 8,
+                      padding: 4,
+                      cursor: "pointer",
+                      background: editedContent.illustration === il.id ? "#EBE1FF" : "white",
+                      textAlign: "center",
+                    }}
+                  >
+                    {il.id !== "none" ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={illusSrc(il.id)}
+                        alt={il.label}
+                        style={{ width: "100%", height: 40, objectFit: "contain" }}
+                      />
+                    ) : (
+                      <div style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "rgba(60,60,60,0.4)" }}>
+                        None
+                      </div>
+                    )}
+                    <div style={{ fontSize: 9, color: "rgba(60,60,60,0.5)", marginTop: 2 }}>{il.label}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* URL */}
+        <div style={group}>
+          <div style={groupLabel}>URL / handle</div>
+          <input
+            value={editedContent.url}
+            onChange={(e) => setContent("url", e.target.value)}
+            style={inputStyle}
+            placeholder="stayinsured.de"
+          />
+        </div>
+
+        {/* Safe zone toggle */}
+        {safeZoneApplies && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 18, cursor: "pointer" }}>
+            <input type="checkbox" checked={showSafeZone} onChange={(e) => setShowSafeZone(e.target.checked)} />
+            Show ad safe zone
+          </label>
+        )}
+
+        {/* Download */}
+        <button onClick={onDownload} disabled={downloading} style={{ ...downloadBtn, opacity: downloading ? 0.6 : 1 }}>
+          {downloading ? "Exporting…" : isCarousel ? "⬇ Download carousel (ZIP)" : "⬇ Download PNG"}
+        </button>
+
+        {!isCarousel && (
+          <button
+            onClick={onDownloadAllFormats}
+            disabled={downloading}
+            style={{ ...downloadBtn, background: "white", color: "#3C3C3C", border: "1.5px solid rgba(60,60,60,0.15)", marginTop: 8, opacity: downloading ? 0.6 : 1 }}
+            title="Render this design into every available format and bundle as ZIP"
+          >
+            ⬇ Download all formats (ZIP)
+          </button>
+        )}
+
+        <div style={{ fontSize: 10, color: "rgba(60,60,60,0.4)", textAlign: "center", marginTop: 8, lineHeight: 1.5 }}>
+          Exports at full resolution ({fmt.sub})
+        </div>
+
+        <SavedDesignsPanel
+          currentDesign={design}
+          onLoad={(d) => setDesign(() => d)}
+          onDownloadSaved={onDownloadSaved}
+          downloading={downloading}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Inline styles — kept here because Tailwind arbitrary borders/transitions get
+// messy for a tight control panel. Migrate to Tailwind once the UI stabilises.
+const group: React.CSSProperties = { marginBottom: 18 };
+const groupLabel: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.07em",
+  textTransform: "uppercase",
+  color: "rgba(60,60,60,0.4)",
+  marginBottom: 7,
+};
+const categoryLabel: React.CSSProperties = {
+  fontSize: 9,
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "rgba(60,60,60,0.3)",
+  marginBottom: 4,
+  marginTop: 6,
+};
+const formatBtn: React.CSSProperties = {
+  display: "flex",
+  width: "100%",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "8px 10px",
+  borderRadius: 8,
+  marginBottom: 4,
+  background: "transparent",
+  border: "1.5px solid rgba(60,60,60,0.10)",
+  transition: "all 150ms",
+  textAlign: "left",
+};
+const formatBtnActive: React.CSSProperties = { background: "#EBE1FF", borderColor: "#DDD0FF" };
+const formatName: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: "#3C3C3C", fontFamily: "'Arimo',sans-serif" };
+const formatSub: React.CSSProperties = { fontSize: 10, color: "rgba(60,60,60,0.4)", fontFamily: "monospace" };
+const styleBtn: React.CSSProperties = {
+  flex: "1 1 auto",
+  padding: "7px 10px",
+  borderRadius: 7,
+  border: "1.5px solid rgba(60,60,60,0.12)",
+  background: "transparent",
+  cursor: "pointer",
+  fontSize: 12,
+  fontWeight: 600,
+  fontFamily: "'Arimo',sans-serif",
+  color: "#3C3C3C",
+};
+const styleBtnActive: React.CSSProperties = { background: "#3C3C3C", color: "white", borderColor: "#3C3C3C" };
+const textareaStyle: React.CSSProperties = {
+  width: "100%",
+  fontFamily: "'Arimo',sans-serif",
+  fontSize: 13,
+  color: "#3C3C3C",
+  border: "1.5px solid rgba(60,60,60,0.15)",
+  borderRadius: 8,
+  padding: "8px 10px",
+  resize: "vertical",
+  outline: "none",
+  boxSizing: "border-box",
+  lineHeight: 1.5,
+};
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  fontFamily: "'Arimo',sans-serif",
+  fontSize: 13,
+  color: "#3C3C3C",
+  border: "1.5px solid rgba(60,60,60,0.15)",
+  borderRadius: 8,
+  padding: "8px 10px",
+  outline: "none",
+  boxSizing: "border-box",
+};
+const downloadBtn: React.CSSProperties = {
+  width: "100%",
+  background: "#3C3C3C",
+  color: "white",
+  border: "none",
+  borderRadius: 9,
+  padding: "12px 0",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  fontFamily: "'Arimo',sans-serif",
+  letterSpacing: "0.01em",
+};
+
+function SavedDesignsPanel({
+  currentDesign,
+  onLoad,
+  onDownloadSaved,
+  downloading,
+}: {
+  currentDesign: Design;
+  onLoad: (design: Design) => void;
+  onDownloadSaved: (designs: Design[]) => void;
+  downloading: boolean;
+}) {
+  const [designs, setDesigns] = useState<Design[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [name, setName] = useState<string>(currentDesign.name);
+
+  const refresh = () => setDesigns(listDesigns());
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  useEffect(() => {
+    setName(currentDesign.name);
+  }, [currentDesign.id, currentDesign.name]);
+
+  const toggle = (id: string) => {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const save = () => {
+    const toSave: Design = { ...currentDesign, name: name.trim() || "Untitled", updatedAt: Date.now() };
+    saveDesign(toSave);
+    refresh();
+  };
+
+  const remove = (id: string) => {
+    deleteDesign(id);
+    setSelected((s) => {
+      const next = new Set(s);
+      next.delete(id);
+      return next;
+    });
+    refresh();
+  };
+
+  const downloadSelected = () => {
+    const chosen = designs.filter((d) => selected.has(d.id));
+    if (chosen.length === 0) {
+      window.alert("Select at least one design to download.");
+      return;
+    }
+    onDownloadSaved(chosen);
+  };
+
+  return (
+    <div style={{ ...group, marginTop: 24, paddingTop: 18, borderTop: "1px solid rgba(60,60,60,0.10)" }}>
+      <div style={groupLabel}>Saved designs</div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={{ ...inputStyle, flex: 1, fontSize: 12, padding: "7px 10px" }}
+          placeholder="Design name"
+        />
+        <button
+          onClick={save}
+          style={{
+            padding: "7px 12px",
+            borderRadius: 7,
+            border: "1.5px solid #3C3C3C",
+            background: "#3C3C3C",
+            color: "white",
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Save
+        </button>
+      </div>
+
+      {designs.length === 0 ? (
+        <div style={{ fontSize: 11, color: "rgba(60,60,60,0.45)", fontStyle: "italic" }}>
+          No saved designs yet. Save the current one to build a batch.
+        </div>
+      ) : (
+        <>
+          <div style={{ maxHeight: 200, overflowY: "auto", border: "1px solid rgba(60,60,60,0.08)", borderRadius: 7, padding: 4 }}>
+            {designs.map((d) => (
+              <div
+                key={d.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 6px",
+                  fontSize: 12,
+                  borderRadius: 4,
+                  background: selected.has(d.id) ? "#EBE1FF" : "transparent",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.has(d.id)}
+                  onChange={() => toggle(d.id)}
+                  style={{ cursor: "pointer" }}
+                />
+                <button
+                  onClick={() => onLoad(d)}
+                  style={{ flex: 1, textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12, color: "#3C3C3C" }}
+                  title="Load into editor"
+                >
+                  {d.name}
+                  <span style={{ color: "rgba(60,60,60,0.45)", marginLeft: 6, fontSize: 10 }}>{d.format}</span>
+                </button>
+                <button
+                  onClick={() => remove(d.id)}
+                  style={{ background: "none", border: "none", color: "rgba(60,60,60,0.45)", cursor: "pointer", fontSize: 13, padding: "0 4px" }}
+                  title="Delete"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={downloadSelected}
+            disabled={downloading || selected.size === 0}
+            style={{
+              ...downloadBtn,
+              marginTop: 10,
+              background: "white",
+              color: "#3C3C3C",
+              border: "1.5px solid rgba(60,60,60,0.15)",
+              opacity: downloading || selected.size === 0 ? 0.5 : 1,
+            }}
+          >
+            ⬇ Download selected ({selected.size}) as ZIP
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2MB — keeps us under localStorage quota.
+
+function CustomIllustrationUploader({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (dataUrl: string | null) => void;
+}) {
+  const onPick = (file: File | null) => {
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      window.alert("Image must be under 2MB. Try compressing it first (tinypng.com).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string") onChange(result);
+    };
+    reader.onerror = () => window.alert("Couldn't read that file. Try another image.");
+    reader.readAsDataURL(file);
+  };
+  return (
+    <div style={{ marginBottom: 10 }}>
+      {value ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 6, border: "1.5px solid rgba(60,60,60,0.15)", borderRadius: 8 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={value} alt="Your upload" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: "#3C3C3C", flex: 1 }}>Your custom image</span>
+          <button
+            onClick={() => onChange(null)}
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(60,60,60,0.18)",
+              borderRadius: 6,
+              fontSize: 11,
+              padding: "4px 8px",
+              cursor: "pointer",
+              color: "#3C3C3C",
+            }}
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            padding: "10px 12px",
+            border: "1.5px dashed rgba(60,60,60,0.22)",
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#3C3C3C",
+            cursor: "pointer",
+            background: "#FCFCFC",
+          }}
+        >
+          ⬆ Upload your own image
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+            style={{ display: "none" }}
+          />
+        </label>
+      )}
+      <div style={{ fontSize: 10, color: "rgba(60,60,60,0.45)", marginTop: 4, textAlign: "center" }}>
+        PNG, JPG, SVG, WebP — max 2MB
+      </div>
+    </div>
+  );
+}
