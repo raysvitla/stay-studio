@@ -3,12 +3,14 @@
 // Stay Studio — controls panel
 // The form the user interacts with to customise the design.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CarouselSlide, Design, DesignContent, PaletteKey } from "@/types";
 import { CATEGORY_LABELS, FORMATS, getFormat, isCarouselFormat } from "@/lib/formats";
 import { getStyles } from "@/lib/templates";
 import { COLOR_SCHEMES, ILLUSTRATIONS, ILLUSTRATION_ACCENTS, illusSrc } from "@/lib/brand";
 import { deleteDesign, listDesigns, saveDesign } from "@/lib/storage";
+import Icon, { ICON_LABELS, ICON_NAMES, type IconName } from "@/components/brand/Icon";
+import Section from "./Section";
 
 const MAX_SLIDES = 10;
 
@@ -97,363 +99,384 @@ export default function Controls({
     return acc;
   }, {});
 
+  const hasIllustrationAccent =
+    design.style !== "bold" && design.format !== "li-banner" && editedContent.illustration !== "none";
+  const showTextFields = design.format !== "li-banner";
+  const showStatsFields = design.style === "stats";
+  const showStatGridEditor = design.style === "stat-grid";
+  const showTableEditor = design.style === "compare-table";
+  const photoLabel = design.style === "photo-hero" ? "Photo" : "Person photo";
+
   return (
     <div className="stay-scrollbar" style={{ width: 320, flexShrink: 0, background: "#FFFFFF", borderRight: "1px solid rgba(60,60,60,0.08)", height: "100vh", overflowY: "auto" }}>
-      <div style={{ padding: 18 }}>
-        {/* Format */}
-        <div style={group}>
-          <div style={groupLabel}>Format</div>
-          {Object.entries(groupedByCategory).map(([cat, list]) => (
-            <div key={cat} style={{ marginBottom: 10 }}>
-              <div style={categoryLabel}>{CATEGORY_LABELS[cat] ?? cat}</div>
-              {list.map((f) => {
-                const disabled = f.status !== "ready";
-                const active = design.format === f.id;
-                return (
-                  <button
-                    key={f.id}
-                    disabled={disabled}
-                    onClick={() => {
-                      const firstStyle = getStyles(f.id)[0]?.id ?? "";
-                      setDesign((d) => ({ ...d, format: f.id, style: firstStyle, updatedAt: Date.now() }));
-                    }}
-                    style={{
-                      ...formatBtn,
-                      ...(active ? formatBtnActive : {}),
-                      opacity: disabled ? 0.35 : 1,
-                      cursor: disabled ? "not-allowed" : "pointer",
-                    }}
-                    title={disabled ? "Not ready in this phase" : f.sub}
-                  >
-                    <span style={formatName}>{f.label}</span>
-                    <span style={formatSub}>{f.sub}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Layout / style */}
-        {styles.length > 1 && (
+      <div style={{ padding: "6px 18px 18px" }}>
+        {/* ── FORMAT ─────────────────────────────────────────────── */}
+        <Section title="Format" defaultOpen persistKey="format">
           <div style={group}>
-            <div style={groupLabel}>Layout</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {styles.map((st) => (
-                <button
-                  key={st.id}
-                  onClick={() => set("style", st.id)}
-                  style={{ ...styleBtn, ...(design.style === st.id ? styleBtnActive : {}) }}
-                >
-                  {st.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Carousel slide manager */}
-        {isCarousel && design.slides && (
-          <div style={group}>
-            <div style={groupLabel}>
-              Slides · editing {activeSlide + 1}/{design.slides.length}
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-              {design.slides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveSlide(i)}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 7,
-                    fontFamily: "'Arimo',sans-serif",
-                    fontWeight: 700,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    border: `1.5px solid ${activeSlide === i ? "#3C3C3C" : "rgba(60,60,60,0.15)"}`,
-                    background: activeSlide === i ? "#3C3C3C" : "white",
-                    color: activeSlide === i ? "white" : "#3C3C3C",
-                  }}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              {design.slides.length < MAX_SLIDES && (
-                <button
-                  onClick={addSlide}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 7,
-                    border: "1.5px dashed rgba(60,60,60,0.25)",
-                    background: "transparent",
-                    cursor: "pointer",
-                    fontSize: 18,
-                    color: "#3C3C3C",
-                  }}
-                  title="Add slide"
-                >
-                  +
-                </button>
-              )}
-            </div>
-            {design.slides.length > 1 && (
-              <button
-                onClick={() => removeSlide(activeSlide)}
-                style={{
-                  fontSize: 11,
-                  color: "rgba(60,60,60,0.55)",
-                  background: "transparent",
-                  border: "none",
-                  textDecoration: "underline",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-              >
-                Remove slide {activeSlide + 1}
-              </button>
-            )}
-            <div style={{ fontSize: 10, color: "rgba(60,60,60,0.45)", marginTop: 6, lineHeight: 1.4 }}>
-              2–10 slides. Each slide has its own text. Export bundles them as a ZIP ready for Instagram / Meta Ads Manager.
-            </div>
-          </div>
-        )}
-
-        {/* Colour */}
-        <div style={group}>
-          <div style={groupLabel}>Colour</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {COLOR_SCHEMES.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => set("color", c.id as PaletteKey)}
-                title={c.name}
-                aria-label={c.name}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  background: c.bg,
-                  border: `2.5px solid ${design.color === c.id ? "#3C3C3C" : "rgba(60,60,60,0.12)"}`,
-                  cursor: "pointer",
-                  padding: 0,
-                  transition: "border-color 150ms",
-                }}
-              />
+            <div style={groupLabel}>Format</div>
+            {Object.entries(groupedByCategory).map(([cat, list]) => (
+              <div key={cat} style={{ marginBottom: 10 }}>
+                <div style={categoryLabel}>{CATEGORY_LABELS[cat] ?? cat}</div>
+                {list.map((f) => {
+                  const disabled = f.status !== "ready";
+                  const active = design.format === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      disabled={disabled}
+                      onClick={() => {
+                        const firstStyle = getStyles(f.id)[0]?.id ?? "";
+                        setDesign((d) => ({ ...d, format: f.id, style: firstStyle, updatedAt: Date.now() }));
+                      }}
+                      style={{
+                        ...formatBtn,
+                        ...(active ? formatBtnActive : {}),
+                        opacity: disabled ? 0.35 : 1,
+                        cursor: disabled ? "not-allowed" : "pointer",
+                      }}
+                      title={disabled ? "Not ready in this phase" : f.sub}
+                    >
+                      <span style={formatName}>{f.label}</span>
+                      <span style={formatSub}>{f.sub}</span>
+                    </button>
+                  );
+                })}
+              </div>
             ))}
           </div>
-        </div>
 
-        {/* Headline */}
-        <div style={group}>
-          <div style={groupLabel}>Headline</div>
-          <textarea
-            value={editedContent.headline}
-            onChange={(e) => setContent("headline", e.target.value)}
-            style={textareaStyle}
-            rows={3}
-            placeholder="Your headline here…"
-          />
-        </div>
+          {styles.length > 1 && (
+            <div style={group}>
+              <div style={groupLabel}>Layout</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {styles.map((st) => (
+                  <button
+                    key={st.id}
+                    onClick={() => set("style", st.id)}
+                    style={{ ...styleBtn, ...(design.style === st.id ? styleBtnActive : {}) }}
+                  >
+                    {st.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {/* Body */}
-        {design.format !== "li-banner" && (
+          {isCarousel && design.slides && (
+            <div style={group}>
+              <div style={groupLabel}>
+                Slides · editing {activeSlide + 1}/{design.slides.length}
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                {design.slides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveSlide(i)}
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 7,
+                      fontFamily: "'Arimo',sans-serif",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      border: `1.5px solid ${activeSlide === i ? "#3C3C3C" : "rgba(60,60,60,0.15)"}`,
+                      background: activeSlide === i ? "#3C3C3C" : "white",
+                      color: activeSlide === i ? "white" : "#3C3C3C",
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                {design.slides.length < MAX_SLIDES && (
+                  <button
+                    onClick={addSlide}
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 7,
+                      border: "1.5px dashed rgba(60,60,60,0.25)",
+                      background: "transparent",
+                      cursor: "pointer",
+                      fontSize: 18,
+                      color: "#3C3C3C",
+                    }}
+                    title="Add slide"
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+              {design.slides.length > 1 && (
+                <button
+                  onClick={() => removeSlide(activeSlide)}
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(60,60,60,0.55)",
+                    background: "transparent",
+                    border: "none",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  Remove slide {activeSlide + 1}
+                </button>
+              )}
+              <div style={{ fontSize: 10, color: "rgba(60,60,60,0.45)", marginTop: 6, lineHeight: 1.4 }}>
+                2–10 slides. Each slide has its own text. Export bundles them as a ZIP ready for Instagram / Meta Ads Manager.
+              </div>
+            </div>
+          )}
+        </Section>
+
+        {/* ── CONTENT ────────────────────────────────────────────── */}
+        <Section title="Content" defaultOpen persistKey="content">
           <div style={group}>
-            <div style={groupLabel}>Body text</div>
-            <textarea
-              value={editedContent.body}
-              onChange={(e) => setContent("body", e.target.value)}
-              style={textareaStyle}
-              rows={2}
-              placeholder="Supporting message…"
+            <div style={groupLabel}>Headline</div>
+            <TextFieldWithIcons
+              value={editedContent.headline}
+              onChange={(v) => setContent("headline", v)}
+              rows={3}
+              placeholder="Your headline here…"
             />
           </div>
-        )}
 
-        {/* CTA */}
-        {design.format !== "li-banner" && (
-          <div style={group}>
-            <div style={groupLabel}>CTA</div>
-            <input
-              value={editedContent.cta}
-              onChange={(e) => setContent("cta", e.target.value)}
-              style={inputStyle}
-              placeholder="e.g. Get a free quote →"
-            />
-          </div>
-        )}
+          {showTextFields && (
+            <div style={group}>
+              <div style={groupLabel}>Body text</div>
+              <TextFieldWithIcons
+                value={editedContent.body}
+                onChange={(v) => setContent("body", v)}
+                rows={2}
+                placeholder="Supporting message…"
+              />
+            </div>
+          )}
 
-        {/* Stats — only for stats style */}
-        {design.style === "stats" && (
-          <div style={group}>
-            <div style={groupLabel}>Big number</div>
-            <input
-              value={editedContent.stat}
-              onChange={(e) => setContent("stat", e.target.value)}
-              style={inputStyle}
-              placeholder="e.g. 3,000+"
-            />
-            <input
-              value={editedContent.statLabel}
-              onChange={(e) => setContent("statLabel", e.target.value)}
-              style={{ ...inputStyle, marginTop: 6 }}
-              placeholder="e.g. Clients protected"
-            />
-          </div>
-        )}
+          {showTextFields && (
+            <div style={group}>
+              <div style={groupLabel}>CTA</div>
+              <TextFieldWithIcons
+                value={editedContent.cta}
+                onChange={(v) => setContent("cta", v)}
+                rows={1}
+                placeholder="e.g. Get a free quote →"
+              />
+            </div>
+          )}
 
-        {/* Illustration accent colour */}
-        {design.style !== "bold" && design.format !== "li-banner" && editedContent.illustration !== "none" && (
+          {showStatsFields && (
+            <div style={group}>
+              <div style={groupLabel}>Big number</div>
+              <input
+                value={editedContent.stat}
+                onChange={(e) => setContent("stat", e.target.value)}
+                style={inputStyle}
+                placeholder="e.g. 3,000+"
+              />
+              <input
+                value={editedContent.statLabel}
+                onChange={(e) => setContent("statLabel", e.target.value)}
+                style={{ ...inputStyle, marginTop: 6 }}
+                placeholder="e.g. Clients protected"
+              />
+            </div>
+          )}
+
+          {showStatGridEditor && (
+            <div style={group}>
+              <div style={groupLabel}>Stat grid (4 cells)</div>
+              <StatGridEditor
+                value={editedContent.stats ?? null}
+                onChange={(v) => setContent("stats", v)}
+              />
+            </div>
+          )}
+
+          {showTableEditor && (
+            <div style={group}>
+              <div style={groupLabel}>Compare table</div>
+              <TableEditor
+                value={editedContent.table ?? null}
+                onChange={(v) => setContent("table", v)}
+              />
+            </div>
+          )}
+        </Section>
+
+        {/* ── VISUAL ─────────────────────────────────────────────── */}
+        <Section title="Visual" defaultOpen persistKey="visual">
           <div style={group}>
-            <div style={groupLabel}>Illustration background</div>
+            <div style={groupLabel}>Colour</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {ILLUSTRATION_ACCENTS.map((c) => (
+              {COLOR_SCHEMES.map((c) => (
                 <button
                   key={c.id}
-                  onClick={() => setContent("illusAccent", c.id)}
+                  onClick={() => set("color", c.id as PaletteKey)}
                   title={c.name}
                   aria-label={c.name}
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 7,
-                    background: c.id,
-                    padding: 0,
-                    border: `2.5px solid ${editedContent.illusAccent === c.id ? "#3C3C3C" : "rgba(60,60,60,0.12)"}`,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: c.bg,
+                    border: `2.5px solid ${design.color === c.id ? "#3C3C3C" : "rgba(60,60,60,0.12)"}`,
                     cursor: "pointer",
-                    flexShrink: 0,
+                    padding: 0,
+                    transition: "border-color 150ms",
                   }}
                 />
               ))}
             </div>
           </div>
-        )}
 
-        {/* Person photo (used by YouTube thumbnail and similar templates) */}
-        {showPersonPhotoSection && (
-          <div style={group}>
-            <div style={groupLabel}>Person photo</div>
-            <PersonPhotoUploader
-              value={editedContent.photoUrl ?? null}
-              onChange={(url) => setContent("photoUrl", url)}
-            />
-          </div>
-        )}
-
-        {/* Accent text badge (YouTube thumbnails) */}
-        {showAccentTextSection && (
-          <div style={group}>
-            <div style={groupLabel}>Accent badge</div>
-            <input
-              value={editedContent.accentText ?? ""}
-              onChange={(e) => setContent("accentText", e.target.value || null)}
-              style={inputStyle}
-              placeholder="2025 · EP. 3 · NEW"
-              maxLength={12}
-            />
-          </div>
-        )}
-
-        {/* Illustration picker */}
-        {showIllustrationSection && (
-          <div style={group}>
-            <div style={groupLabel}>Illustration</div>
-
-            {/* Custom upload — takes precedence over brand illustrations. */}
-            <CustomIllustrationUploader
-              value={editedContent.customIllustration ?? null}
-              onChange={(url) => setContent("customIllustration", url)}
-            />
-
-            {/* Hide the brand grid when the user has uploaded their own; keeps
-             * intent clear (one source of truth per design). */}
-            {!editedContent.customIllustration && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
-                {ILLUSTRATIONS.map((il) => (
+          {hasIllustrationAccent && (
+            <div style={group}>
+              <div style={groupLabel}>Illustration background</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {ILLUSTRATION_ACCENTS.map((c) => (
                   <button
-                    key={il.id}
-                    onClick={() => setContent("illustration", il.id)}
+                    key={c.id}
+                    onClick={() => setContent("illusAccent", c.id)}
+                    title={c.name}
+                    aria-label={c.name}
                     style={{
-                      border: `2px solid ${editedContent.illustration === il.id ? "#3C3C3C" : "rgba(60,60,60,0.10)"}`,
-                      borderRadius: 8,
-                      padding: 4,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 7,
+                      background: c.id,
+                      padding: 0,
+                      border: `2.5px solid ${editedContent.illusAccent === c.id ? "#3C3C3C" : "rgba(60,60,60,0.12)"}`,
                       cursor: "pointer",
-                      background: editedContent.illustration === il.id ? "#EBE1FF" : "white",
-                      textAlign: "center",
+                      flexShrink: 0,
                     }}
-                  >
-                    {il.id !== "none" ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={illusSrc(il.id)}
-                        alt={il.label}
-                        style={{ width: "100%", height: 40, objectFit: "contain" }}
-                      />
-                    ) : (
-                      <div style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "rgba(60,60,60,0.4)" }}>
-                        None
-                      </div>
-                    )}
-                    <div style={{ fontSize: 9, color: "rgba(60,60,60,0.5)", marginTop: 2 }}>{il.label}</div>
-                  </button>
+                  />
                 ))}
               </div>
-            )}
+            </div>
+          )}
+
+          {showIllustrationSection && (
+            <div style={group}>
+              <div style={groupLabel}>Illustration</div>
+              <CustomIllustrationUploader
+                value={editedContent.customIllustration ?? null}
+                onChange={(url) => setContent("customIllustration", url)}
+              />
+              {!editedContent.customIllustration && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
+                  {ILLUSTRATIONS.map((il) => (
+                    <button
+                      key={il.id}
+                      onClick={() => setContent("illustration", il.id)}
+                      style={{
+                        border: `2px solid ${editedContent.illustration === il.id ? "#3C3C3C" : "rgba(60,60,60,0.10)"}`,
+                        borderRadius: 8,
+                        padding: 4,
+                        cursor: "pointer",
+                        background: editedContent.illustration === il.id ? "#EBE1FF" : "white",
+                        textAlign: "center",
+                      }}
+                    >
+                      {il.id !== "none" ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={illusSrc(il.id)}
+                          alt={il.label}
+                          style={{ width: "100%", height: 40, objectFit: "contain" }}
+                        />
+                      ) : (
+                        <div style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "rgba(60,60,60,0.4)" }}>
+                          None
+                        </div>
+                      )}
+                      <div style={{ fontSize: 9, color: "rgba(60,60,60,0.5)", marginTop: 2 }}>{il.label}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {showPersonPhotoSection && (
+            <div style={group}>
+              <div style={groupLabel}>{photoLabel}</div>
+              <PersonPhotoUploader
+                value={editedContent.photoUrl ?? null}
+                onChange={(url) => setContent("photoUrl", url)}
+                label={photoLabel}
+              />
+            </div>
+          )}
+        </Section>
+
+        {/* ── BRAND ──────────────────────────────────────────────── */}
+        <Section title="Brand" defaultOpen={false} persistKey="brand">
+          <div style={group}>
+            <div style={groupLabel}>URL / handle</div>
+            <input
+              value={editedContent.url}
+              onChange={(e) => setContent("url", e.target.value)}
+              style={inputStyle}
+              placeholder="stayinsured.de"
+            />
           </div>
-        )}
 
-        {/* URL */}
-        <div style={group}>
-          <div style={groupLabel}>URL / handle</div>
-          <input
-            value={editedContent.url}
-            onChange={(e) => setContent("url", e.target.value)}
-            style={inputStyle}
-            placeholder="stayinsured.de"
-          />
-        </div>
+          {showAccentTextSection && (
+            <div style={group}>
+              <div style={groupLabel}>Accent badge</div>
+              <input
+                value={editedContent.accentText ?? ""}
+                onChange={(e) => setContent("accentText", e.target.value || null)}
+                style={inputStyle}
+                placeholder="2025 · EP. 3 · NEW"
+                maxLength={12}
+              />
+            </div>
+          )}
+        </Section>
 
-        {/* Safe zone toggle */}
-        {safeZoneApplies && (
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 18, cursor: "pointer" }}>
-            <input type="checkbox" checked={showSafeZone} onChange={(e) => setShowSafeZone(e.target.checked)} />
-            Show ad safe zone
+        {/* ── EXPORT ─────────────────────────────────────────────── */}
+        <Section title="Export" defaultOpen persistKey="export">
+          {safeZoneApplies && (
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 10, cursor: "pointer" }}>
+              <input type="checkbox" checked={showSafeZone} onChange={(e) => setShowSafeZone(e.target.checked)} />
+              Show ad safe zone
+            </label>
+          )}
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 10, cursor: "pointer" }}>
+            <input type="checkbox" checked={hdExport} onChange={(e) => setHdExport(e.target.checked)} />
+            HD export (2× pixel ratio)
           </label>
-        )}
 
-        {/* HD export toggle */}
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 10, cursor: "pointer" }}>
-          <input type="checkbox" checked={hdExport} onChange={(e) => setHdExport(e.target.checked)} />
-          HD export (2× pixel ratio)
-        </label>
-
-        {/* Download */}
-        <button onClick={onDownload} disabled={downloading} style={{ ...downloadBtn, opacity: downloading ? 0.6 : 1 }}>
-          {downloading ? "Exporting…" : isCarousel ? "⬇ Download carousel (ZIP)" : "⬇ Download PNG"}
-        </button>
-
-        {!isCarousel && (
-          <button
-            onClick={onDownloadAllFormats}
-            disabled={downloading}
-            style={{ ...downloadBtn, background: "white", color: "#3C3C3C", border: "1.5px solid rgba(60,60,60,0.15)", marginTop: 8, opacity: downloading ? 0.6 : 1 }}
-            title="Render this design into every available format and bundle as ZIP"
-          >
-            ⬇ Download all formats (ZIP)
+          <button onClick={onDownload} disabled={downloading} style={{ ...downloadBtn, opacity: downloading ? 0.6 : 1 }}>
+            {downloading ? "Exporting…" : isCarousel ? "⬇ Download carousel (ZIP)" : "⬇ Download PNG"}
           </button>
-        )}
 
-        <div style={{ fontSize: 10, color: "rgba(60,60,60,0.4)", textAlign: "center", marginTop: 8, lineHeight: 1.5 }}>
-          Exports at full resolution ({fmt.sub})
-        </div>
+          {!isCarousel && (
+            <button
+              onClick={onDownloadAllFormats}
+              disabled={downloading}
+              style={{ ...downloadBtn, background: "white", color: "#3C3C3C", border: "1.5px solid rgba(60,60,60,0.15)", marginTop: 8, opacity: downloading ? 0.6 : 1 }}
+              title="Render this design into every available format and bundle as ZIP"
+            >
+              ⬇ Download all formats (ZIP)
+            </button>
+          )}
 
-        <SavedDesignsPanel
-          currentDesign={design}
-          onLoad={(d) => setDesign(() => d)}
-          onDownloadSaved={onDownloadSaved}
-          downloading={downloading}
-        />
+          <div style={{ fontSize: 10, color: "rgba(60,60,60,0.4)", textAlign: "center", marginTop: 8, lineHeight: 1.5 }}>
+            Exports at full resolution ({fmt.sub})
+          </div>
+
+          <SavedDesignsPanel
+            currentDesign={design}
+            onLoad={(d) => setDesign(() => d)}
+            onDownloadSaved={onDownloadSaved}
+            downloading={downloading}
+          />
+        </Section>
       </div>
     </div>
   );
@@ -823,6 +846,89 @@ function ImageUploader({
   );
 }
 
+// Text input with a row of insertable `{icon:name}` tokens below.
+// Caret position is preserved so clicking an icon inserts it where the user
+// was typing.
+function TextFieldWithIcons({
+  value,
+  onChange,
+  rows = 1,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  rows?: number;
+  placeholder?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+
+  const insert = (name: IconName) => {
+    const token = `{icon:${name}}`;
+    const el = ref.current;
+    if (!el) {
+      onChange(value + (value.endsWith(" ") ? "" : " ") + token);
+      return;
+    }
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? value.length;
+    const next = value.slice(0, start) + token + value.slice(end);
+    onChange(next);
+    setTimeout(() => {
+      el.focus();
+      const pos = start + token.length;
+      el.setSelectionRange(pos, pos);
+    }, 0);
+  };
+
+  return (
+    <div>
+      {rows > 1 ? (
+        <textarea
+          ref={ref as React.RefObject<HTMLTextAreaElement>}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={rows}
+          placeholder={placeholder}
+          style={textareaStyle}
+        />
+      ) : (
+        <input
+          ref={ref as React.RefObject<HTMLInputElement>}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          style={inputStyle}
+        />
+      )}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 6 }}>
+        {ICON_NAMES.map((n) => (
+          <button
+            key={n}
+            type="button"
+            title={`Insert ${ICON_LABELS[n]} icon`}
+            onClick={() => insert(n)}
+            style={{
+              width: 26,
+              height: 26,
+              padding: 0,
+              borderRadius: 5,
+              border: "1px solid rgba(60,60,60,0.12)",
+              background: "#FCFCFC",
+              cursor: "pointer",
+              color: "#3C3C3C",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon name={n} size={14} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CustomIllustrationUploader({
   value,
   onChange,
@@ -833,12 +939,200 @@ function CustomIllustrationUploader({
   return <ImageUploader value={value} onChange={onChange} label="Your custom image" />;
 }
 
-function PersonPhotoUploader({
+// 2×2 editor for the Stat Grid template. Always renders 4 fixed rows.
+function StatGridEditor({
   value,
   onChange,
 }: {
+  value: Array<{ value: string; label: string }> | null;
+  onChange: (v: Array<{ value: string; label: string }>) => void;
+}) {
+  const stats = [...(value ?? []), { value: "", label: "" }, { value: "", label: "" }, { value: "", label: "" }, { value: "", label: "" }].slice(0, 4);
+  const update = (i: number, key: "value" | "label", v: string) => {
+    const next = stats.map((s, idx) => (idx === i ? { ...s, [key]: v } : s));
+    onChange(next);
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {stats.map((s, i) => (
+        <div key={i} style={{ display: "flex", gap: 6 }}>
+          <input
+            value={s.value}
+            onChange={(e) => update(i, "value", e.target.value)}
+            style={{ ...inputStyle, flex: "0 0 40%", fontSize: 12 }}
+            placeholder={`Stat ${i + 1} (e.g. 3,000+)`}
+          />
+          <input
+            value={s.label}
+            onChange={(e) => update(i, "label", e.target.value)}
+            style={{ ...inputStyle, flex: 1, fontSize: 12 }}
+            placeholder="Label (e.g. Clients)"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Compact compare-table editor: columns (2–3), rows with label + cells that
+// cycle through check / cross / text modes. Optional highlighted footer row.
+function TableEditor({
+  value,
+  onChange,
+}: {
+  value: import("@/types").SlideTable | null;
+  onChange: (v: import("@/types").SlideTable) => void;
+}) {
+  const table: import("@/types").SlideTable = value ?? {
+    columns: ["Public", "Stay"],
+    rows: [{ label: "New row", cells: [{ kind: "cross" }, { kind: "check" }] }],
+    footer: null,
+  };
+  const colCount = table.columns.length;
+
+  const patch = (next: Partial<import("@/types").SlideTable>) => onChange({ ...table, ...next });
+
+  const setCol = (i: number, v: string) => {
+    const columns = table.columns.map((c, idx) => (idx === i ? v : c));
+    patch({ columns });
+  };
+  const addCol = () => {
+    if (colCount >= 3) return;
+    const columns = [...table.columns, `Col ${colCount + 1}`];
+    const rows = table.rows.map((r) => ({ ...r, cells: [...r.cells, { kind: "cross" as const }] }));
+    patch({ columns, rows });
+  };
+  const removeCol = () => {
+    if (colCount <= 2) return;
+    const columns = table.columns.slice(0, -1);
+    const rows = table.rows.map((r) => ({ ...r, cells: r.cells.slice(0, columns.length) }));
+    patch({ columns, rows });
+  };
+
+  const setRowLabel = (i: number, v: string) => {
+    const rows = table.rows.map((r, idx) => (idx === i ? { ...r, label: v } : r));
+    patch({ rows });
+  };
+  const cycleCell = (ri: number, ci: number) => {
+    const cur = table.rows[ri].cells[ci];
+    const kind = cur?.kind ?? "check";
+    const nextCell: import("@/types").TableCell =
+      kind === "check" ? { kind: "cross" } : kind === "cross" ? { kind: "text", value: "—" } : { kind: "check" };
+    const rows = table.rows.map((r, idx) =>
+      idx === ri ? { ...r, cells: r.cells.map((c, j) => (j === ci ? nextCell : c)) } : r
+    );
+    patch({ rows });
+  };
+  const setCellText = (ri: number, ci: number, v: string) => {
+    const rows = table.rows.map((r, idx) =>
+      idx === ri
+        ? {
+            ...r,
+            cells: r.cells.map((c, j) =>
+              j === ci && c?.kind === "text" ? { ...c, value: v } : c
+            ),
+          }
+        : r
+    );
+    patch({ rows });
+  };
+  const addRow = () => {
+    const rows = [
+      ...table.rows,
+      {
+        label: "New row",
+        cells: Array.from({ length: colCount }, () => ({ kind: "cross" as const })),
+      },
+    ];
+    patch({ rows });
+  };
+  const removeRow = (i: number) => {
+    const rows = table.rows.filter((_, idx) => idx !== i);
+    patch({ rows });
+  };
+
+  const cellBtn = (label: string, onClick: () => void, active = false): React.CSSProperties => ({});
+  void cellBtn; // keep reference (lint)
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(60,60,60,0.5)", marginBottom: 4 }}>Columns</div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {table.columns.map((col, i) => (
+            <input
+              key={i}
+              value={col}
+              onChange={(e) => setCol(i, e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 90px", fontSize: 12 }}
+              placeholder={`Col ${i + 1}`}
+            />
+          ))}
+          <div style={{ display: "flex", gap: 4 }}>
+            <button onClick={removeCol} disabled={colCount <= 2} style={miniBtn}>−</button>
+            <button onClick={addCol} disabled={colCount >= 3} style={miniBtn}>+</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(60,60,60,0.5)", marginBottom: 4 }}>Rows</div>
+        {table.rows.map((r, ri) => (
+          <div key={ri} style={{ display: "flex", gap: 4, marginBottom: 6, alignItems: "center" }}>
+            <input
+              value={r.label}
+              onChange={(e) => setRowLabel(ri, e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 90px", fontSize: 11 }}
+              placeholder="Row label"
+            />
+            {r.cells.slice(0, colCount).map((cell, ci) => (
+              <div key={ci} style={{ display: "flex", gap: 2 }}>
+                <button
+                  onClick={() => cycleCell(ri, ci)}
+                  style={{ ...miniBtn, width: cell?.kind === "text" ? 22 : 30 }}
+                  title="Click to cycle: ✓ → ✗ → text"
+                >
+                  {cell?.kind === "check" ? "✓" : cell?.kind === "cross" ? "✗" : "T"}
+                </button>
+                {cell?.kind === "text" && (
+                  <input
+                    value={cell.value}
+                    onChange={(e) => setCellText(ri, ci, e.target.value)}
+                    style={{ ...inputStyle, width: 52, fontSize: 11, padding: "4px 6px" }}
+                  />
+                )}
+              </div>
+            ))}
+            <button onClick={() => removeRow(ri)} style={miniBtn} title="Remove row">×</button>
+          </div>
+        ))}
+        <button onClick={addRow} style={{ ...miniBtn, width: "100%", marginTop: 2 }}>+ Add row</button>
+      </div>
+    </div>
+  );
+}
+
+const miniBtn: React.CSSProperties = {
+  minWidth: 24,
+  height: 26,
+  padding: "0 6px",
+  borderRadius: 6,
+  border: "1px solid rgba(60,60,60,0.18)",
+  background: "white",
+  cursor: "pointer",
+  fontSize: 12,
+  fontFamily: "'Arimo',sans-serif",
+  color: "#3C3C3C",
+};
+
+function PersonPhotoUploader({
+  value,
+  onChange,
+  label = "Person photo",
+}: {
   value: string | null;
   onChange: (dataUrl: string | null) => void;
+  label?: string;
 }) {
-  return <ImageUploader value={value} onChange={onChange} label="Person photo" hint="Upload advisor / host photo — try 'Remove background' for a clean cut-out" />;
+  return <ImageUploader value={value} onChange={onChange} label={label} hint="Upload photo — try 'Remove background' for a clean cut-out" />;
 }

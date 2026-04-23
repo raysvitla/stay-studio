@@ -7,7 +7,7 @@ import {
   resolveCanvas,
 } from "./slideCommon";
 import IllustrationBlock from "../IllustrationBlock";
-import Icon from "../Icon";
+import Icon from "@/components/brand/Icon";
 
 export default function SectionSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const items = (slide.items ?? []).slice(0, 3);

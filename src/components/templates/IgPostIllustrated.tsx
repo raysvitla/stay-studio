@@ -3,6 +3,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc, resolveIllustration } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -40,7 +41,7 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
               whiteSpace: "pre-wrap",
             }}
           >
-            {content.headline || "Staying shouldn't be hard."}
+            <RichText text={content.headline || "Staying shouldn't be hard."} />
           </div>
           {content.body && (
             <div
@@ -53,7 +54,7 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
                 lineHeight: 1.5,
               }}
             >
-              {content.body}
+              <RichText text={content.body} />
             </div>
           )}
           {content.cta && (
@@ -71,7 +72,7 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
                 alignSelf: "flex-start",
               }}
             >
-              {content.cta}
+              <RichText text={content.cta} />
             </div>
           )}
         </div>

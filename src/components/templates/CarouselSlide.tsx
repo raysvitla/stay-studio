@@ -10,6 +10,7 @@
 
 import type { TemplateRenderProps, CarouselSlide as Slide } from "@/types";
 import { logoSrc, resolveIllustration } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderProps) {
   const slides: Slide[] | undefined = state.slides;
@@ -99,7 +100,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
             whiteSpace: "pre-wrap",
           }}
         >
-          {content.headline || (isFirst ? "Swipe to learn more" : isLast ? "Ready to switch?" : "Tap to continue")}
+          <RichText text={content.headline || (isFirst ? "Swipe to learn more" : isLast ? "Ready to switch?" : "Tap to continue")} />
         </div>
 
         {!isFirst && content.body && (
@@ -112,7 +113,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
               lineHeight: 1.5,
             }}
           >
-            {content.body}
+            <RichText text={content.body} />
           </div>
         )}
       </div>
@@ -132,7 +133,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
               display: "inline-block",
             }}
           >
-            {content.cta}
+            <RichText text={content.cta} />
           </div>
         ) : isFirst ? (
           <div

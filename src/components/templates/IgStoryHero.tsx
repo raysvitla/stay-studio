@@ -3,6 +3,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc, resolveIllustration } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function IgStoryHero({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -64,7 +65,7 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
             whiteSpace: "pre-wrap",
           }}
         >
-          {content.headline || "Don't stress. Just Stay."}
+          <RichText text={content.headline || "Don't stress. Just Stay."} />
         </div>
         {content.body && (
           <div
@@ -77,7 +78,7 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
               lineHeight: 1.5,
             }}
           >
-            {content.body}
+            <RichText text={content.body} />
           </div>
         )}
       </div>
@@ -97,7 +98,7 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
               marginBottom: 32,
             }}
           >
-            {content.cta}
+            <RichText text={content.cta} />
           </div>
         )}
         <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 30, color: c.text, opacity: 0.4 }}>

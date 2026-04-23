@@ -71,6 +71,10 @@ export interface DesignContent {
   customIllustration?: string | null;
   /** Small accent label on YouTube thumbnails (e.g. "2025", "EP. 3"). */
   accentText?: string | null;
+  /** Optional 4-cell stat grid data for `stat-grid` style. */
+  stats?: Array<{ value: string; label: string }> | null;
+  /** Optional comparison-table data for `compare-table` style. */
+  table?: SlideTable | null;
 }
 
 /** A single slide inside a carousel design. Each slide has its own content. */

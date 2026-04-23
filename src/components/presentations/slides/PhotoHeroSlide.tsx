@@ -1,6 +1,6 @@
 import type { SlideRenderProps } from "@/types";
 import { SlideFrame, TITLE_STYLE, BODY_STYLE, PAD, resolveCanvas } from "./slideCommon";
-import RichText from "../RichText";
+import RichText from "@/components/brand/RichText";
 
 export default function PhotoHeroSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const photo = slide.photoUrl;

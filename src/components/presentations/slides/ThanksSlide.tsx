@@ -1,8 +1,8 @@
 import type { SlideRenderProps } from "@/types";
 import { SlideFrame, TITLE_STYLE, PAD, resolveCanvas } from "./slideCommon";
-import RichText from "../RichText";
-import Pill from "../Pill";
-import Icon from "../Icon";
+import RichText from "@/components/brand/RichText";
+import Pill from "@/components/brand/Pill";
+import Icon from "@/components/brand/Icon";
 
 export default function ThanksSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const canvas = resolveCanvas(c, canvasMode);

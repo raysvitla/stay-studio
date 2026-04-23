@@ -1,7 +1,7 @@
 import type { SlideRenderProps } from "@/types";
 import { SlideFrame, TITLE_STYLE, BODY_STYLE, PAD, resolveCanvas } from "./slideCommon";
 import IllustrationBlock from "../IllustrationBlock";
-import Icon from "../Icon";
+import Icon from "@/components/brand/Icon";
 
 export default function NumberedListSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const items = (slide.items ?? []).slice(0, 8);

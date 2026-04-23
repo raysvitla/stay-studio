@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 import type { SlideRenderProps, TableCell } from "@/types";
 import { SlideFrame, TITLE_STYLE, PAD, resolveCanvas } from "./slideCommon";
-import Pill from "../Pill";
-import Icon from "../Icon";
+import Pill from "@/components/brand/Pill";
+import Icon from "@/components/brand/Icon";
 
 export default function CompareTableSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const canvas = resolveCanvas(c, canvasMode);

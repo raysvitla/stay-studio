@@ -3,6 +3,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function IgPostStats({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -74,14 +75,14 @@ export default function IgPostStats({ c, state }: TemplateRenderProps) {
             whiteSpace: "pre-wrap",
           }}
         >
-          {content.headline || "Trusted by international residents."}
+          <RichText text={content.headline || "Trusted by international residents."} />
         </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         {content.cta && (
           <div style={{ fontFamily: "'Arimo', sans-serif", fontWeight: 700, fontSize: 30, color: c.text }}>
-            {content.cta}
+            <RichText text={content.cta} />
           </div>
         )}
         <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.4, marginLeft: "auto" }}>

@@ -5,6 +5,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -48,7 +49,7 @@ export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
             wordBreak: "break-word",
           }}
         >
-          {content.headline || "PKV vs GKV:\nthe truth"}
+          <RichText text={content.headline || "PKV vs GKV:\nthe truth"} />
         </div>
         {content.body && (
           <div
@@ -62,7 +63,7 @@ export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
               lineHeight: 1.25,
             }}
           >
-            {content.body}
+            <RichText text={content.body} />
           </div>
         )}
         {content.url && (

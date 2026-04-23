@@ -17,8 +17,8 @@ import type {
 } from "@/types";
 import { SLIDE_TYPE_LABELS, SLIDE_TYPE_ORDER } from "@/lib/presentations/slideRegistry";
 import { ILLUSTRATIONS, ILLUSTRATION_ACCENTS, illusSrc } from "@/lib/brand";
-import { ICON_NAMES, ICON_LABELS } from "./Icon";
-import Icon from "./Icon";
+import { ICON_NAMES, ICON_LABELS } from "@/components/brand/Icon";
+import Icon from "@/components/brand/Icon";
 
 interface Props {
   slide: Slide;

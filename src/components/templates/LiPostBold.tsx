@@ -3,6 +3,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function LiPostBold({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -35,7 +36,7 @@ export default function LiPostBold({ c, state }: TemplateRenderProps) {
             whiteSpace: "pre-wrap",
           }}
         >
-          {content.headline || "We make German insurance simple."}
+          <RichText text={content.headline || "We make German insurance simple."} />
         </div>
         {content.body && (
           <div
@@ -48,7 +49,7 @@ export default function LiPostBold({ c, state }: TemplateRenderProps) {
               lineHeight: 1.5,
             }}
           >
-            {content.body}
+            <RichText text={content.body} />
           </div>
         )}
       </div>
@@ -65,7 +66,7 @@ export default function LiPostBold({ c, state }: TemplateRenderProps) {
               padding: "11px 26px",
             }}
           >
-            {content.cta}
+            <RichText text={content.cta} />
           </div>
         )}
         <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 16, color: c.text, opacity: 0.4, marginLeft: "auto" }}>

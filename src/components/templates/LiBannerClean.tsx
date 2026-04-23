@@ -3,6 +3,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc, resolveIllustration } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function LiBannerClean({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -55,7 +56,7 @@ export default function LiBannerClean({ c, state }: TemplateRenderProps) {
             whiteSpace: "pre-wrap",
           }}
         >
-          {content.headline || "Insurance for international residents in Germany."}
+          <RichText text={content.headline || "Insurance for international residents in Germany."} />
         </div>
       </div>
     </div>

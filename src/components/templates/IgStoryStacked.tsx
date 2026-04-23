@@ -3,6 +3,7 @@
 
 import type { TemplateRenderProps } from "@/types";
 import { logoSrc, resolveIllustration } from "@/lib/brand";
+import RichText from "@/components/brand/RichText";
 
 export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
   const { content } = state;
@@ -66,7 +67,7 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
               whiteSpace: "pre-wrap",
             }}
           >
-            {content.headline || "Reliable insurance. Real humans."}
+            <RichText text={content.headline || "Reliable insurance. Real humans."} />
           </div>
           {content.body && (
             <div
@@ -79,7 +80,7 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
                 lineHeight: 1.5,
               }}
             >
-              {content.body}
+              <RichText text={content.body} />
             </div>
           )}
         </div>
@@ -99,7 +100,7 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
                 marginBottom: 28,
               }}
             >
-              {content.cta}
+              <RichText text={content.cta} />
             </div>
           )}
           <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 28, color: c.text, opacity: 0.4 }}>

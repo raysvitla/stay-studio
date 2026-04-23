@@ -1,7 +1,7 @@
 import type { SlideRenderProps } from "@/types";
 import { SlideFrame, TITLE_STYLE, PAD, resolveCanvas } from "./slideCommon";
-import Pill from "../Pill";
-import RichText from "../RichText";
+import Pill from "@/components/brand/Pill";
+import RichText from "@/components/brand/RichText";
 import IllustrationBlock from "../IllustrationBlock";
 
 export default function CoverSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {

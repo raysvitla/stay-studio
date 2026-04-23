@@ -1,7 +1,7 @@
 import type { SlideRenderProps } from "@/types";
 import { SlideFrame, TITLE_STYLE, BODY_STYLE, PAD, resolveCanvas } from "./slideCommon";
-import Pill from "../Pill";
-import Icon from "../Icon";
+import Pill from "@/components/brand/Pill";
+import Icon from "@/components/brand/Icon";
 
 export default function ThreeColSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const cols = (slide.columns ?? []).slice(0, 3);
