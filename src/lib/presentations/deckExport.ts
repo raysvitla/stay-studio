@@ -16,9 +16,18 @@ export interface DeckExportOptions {
   pixelRatio?: number;
 }
 
-async function renderSlideToPng(slide: Slide, c: ColorScheme, pixelRatio: number): Promise<string> {
+async function renderSlideToPng(
+  slide: Slide,
+  c: ColorScheme,
+  pixelRatio: number,
+  ctx: { pageNumber: number; totalPages: number; canvasMode: "white" | "tinted" },
+): Promise<string> {
   const Slide = SLIDE_COMPONENTS[slide.type];
   if (!Slide) throw new Error(`Unknown slide type: ${slide.type}`);
+
+  const useWhite = ctx.canvasMode === "white" && c.id !== "dark";
+  const canvasBg = useWhite ? "#FFFFFF" : c.bg;
+  const canvasFg = useWhite ? "#3C3C3C" : c.text;
 
   const host = document.createElement("div");
   host.style.position = "fixed";
@@ -32,16 +41,24 @@ async function renderSlideToPng(slide: Slide, c: ColorScheme, pixelRatio: number
   const inner = document.createElement("div");
   inner.style.width = `${SLIDE_WIDTH}px`;
   inner.style.height = `${SLIDE_HEIGHT}px`;
-  inner.style.background = c.bg;
-  inner.style.color = c.text;
+  inner.style.background = canvasBg;
+  inner.style.color = canvasFg;
   host.appendChild(inner);
 
   const innerRoot: Root = createRoot(inner);
   flushSync(() => {
-    innerRoot.render(React.createElement(Slide, { c, slide }));
+    innerRoot.render(
+      React.createElement(Slide, {
+        c,
+        slide,
+        pageNumber: ctx.pageNumber,
+        totalPages: ctx.totalPages,
+        canvasMode: ctx.canvasMode,
+      }),
+    );
   });
 
-  await new Promise((r) => setTimeout(r, 140));
+  await new Promise((r) => setTimeout(r, 200));
 
   try {
     const dataUrl = await toPng(inner, {
@@ -83,9 +100,14 @@ export async function exportDeckAsZip(p: Presentation, opts: DeckExportOptions =
   if (p.slides.length === 0) throw new Error("Deck has no slides");
   const c = getColorScheme(p.palette);
   const pr = opts.pixelRatio ?? 2;
+  const canvasMode = p.canvasMode ?? "tinted";
   const zip = new JSZip();
   for (let i = 0; i < p.slides.length; i++) {
-    const dataUrl = await renderSlideToPng(p.slides[i], c, pr);
+    const dataUrl = await renderSlideToPng(p.slides[i], c, pr, {
+      pageNumber: i + 1,
+      totalPages: p.slides.length,
+      canvasMode,
+    });
     zip.file(`slide-${String(i + 1).padStart(2, "0")}.png`, dataUrlToBlob(dataUrl));
   }
   const blob = await zip.generateAsync({ type: "blob" });
@@ -96,12 +118,17 @@ export async function exportDeckAsPdf(p: Presentation, opts: DeckExportOptions =
   if (p.slides.length === 0) throw new Error("Deck has no slides");
   const c = getColorScheme(p.palette);
   const pr = opts.pixelRatio ?? 2;
+  const canvasMode = p.canvasMode ?? "tinted";
 
   const { default: jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [SLIDE_WIDTH, SLIDE_HEIGHT] });
 
   for (let i = 0; i < p.slides.length; i++) {
-    const dataUrl = await renderSlideToPng(p.slides[i], c, pr);
+    const dataUrl = await renderSlideToPng(p.slides[i], c, pr, {
+      pageNumber: i + 1,
+      totalPages: p.slides.length,
+      canvasMode,
+    });
     if (i > 0) pdf.addPage([SLIDE_WIDTH, SLIDE_HEIGHT], "landscape");
     pdf.addImage(dataUrl, "PNG", 0, 0, SLIDE_WIDTH, SLIDE_HEIGHT);
   }

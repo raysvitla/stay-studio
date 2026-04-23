@@ -14,9 +14,12 @@ interface Props {
   /** When true, container fills its parent and scales to fit. When false,
    * renders at native 1920×1080 (used by off-screen export). */
   scaled?: boolean;
+  pageNumber?: number;
+  totalPages?: number;
+  canvasMode?: "white" | "tinted";
 }
 
-const SlideCanvas = forwardRef<SlideCanvasHandle, Props>(function SlideCanvas({ slide, c, scaled = true }, ref) {
+const SlideCanvas = forwardRef<SlideCanvasHandle, Props>(function SlideCanvas({ slide, c, scaled = true, pageNumber, totalPages, canvasMode = "tinted" }, ref) {
   const innerRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 1200, h: 700 });
@@ -36,13 +39,20 @@ const SlideCanvas = forwardRef<SlideCanvasHandle, Props>(function SlideCanvas({ 
   const Slide = SLIDE_COMPONENTS[slide.type];
   if (!Slide) return null;
 
+  // In white-canvas mode, the slide background becomes white (except for the
+  // "dark" palette which inverts). The original palette bg is still used as
+  // the "accent" by slide components via c.bg.
+  const useWhite = canvasMode === "white" && c.id !== "dark";
+  const canvasBg = useWhite ? "#FFFFFF" : c.bg;
+  const canvasFg = useWhite ? "#3C3C3C" : c.text;
+
   if (!scaled) {
     return (
       <div
         ref={innerRef}
-        style={{ width: SLIDE_WIDTH, height: SLIDE_HEIGHT, background: c.bg, color: c.text }}
+        style={{ width: SLIDE_WIDTH, height: SLIDE_HEIGHT, background: canvasBg, color: canvasFg }}
       >
-        <Slide c={c} slide={slide} />
+        <Slide c={c} slide={slide} pageNumber={pageNumber} totalPages={totalPages} canvasMode={canvasMode} />
       </div>
     );
   }
@@ -85,11 +95,11 @@ const SlideCanvas = forwardRef<SlideCanvasHandle, Props>(function SlideCanvas({ 
             position: "absolute",
             top: 0,
             left: 0,
-            background: c.bg,
-            color: c.text,
+            background: canvasBg,
+            color: canvasFg,
           }}
         >
-          <Slide c={c} slide={slide} />
+          <Slide c={c} slide={slide} pageNumber={pageNumber} totalPages={totalPages} canvasMode={canvasMode} />
         </div>
       </div>
     </div>

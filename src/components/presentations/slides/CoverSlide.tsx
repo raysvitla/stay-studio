@@ -1,50 +1,66 @@
 import type { SlideRenderProps } from "@/types";
-import { SlideFrame, SlideBadge, TITLE_STYLE, PAD, LABEL_STYLE } from "./slideCommon";
+import { SlideFrame, TITLE_STYLE, PAD, resolveCanvas } from "./slideCommon";
+import Pill from "../Pill";
+import RichText from "../RichText";
+import IllustrationBlock from "../IllustrationBlock";
 
-export default function CoverSlide({ c, slide }: SlideRenderProps) {
+export default function CoverSlide({ c, slide, pageNumber, totalPages, canvasMode = "tinted" }: SlideRenderProps) {
   const title = slide.title || "We know the rules\nso you don't have to.";
+  const canvas = resolveCanvas(c, canvasMode);
+  const hasIllus = Boolean(slide.illustration);
   return (
     <SlideFrame
       c={c}
-      topBar={slide.accentText ? <SlideBadge c={c} text={slide.accentText} /> : null}
+      canvasMode={canvasMode}
+      pageNumber={pageNumber}
+      totalPages={totalPages}
+      topBar={
+        slide.accentText ? (
+          <Pill variant="filled" accent={canvas.accent} text={canvas.fg} size="md">
+            {slide.accentText}
+          </Pill>
+        ) : null
+      }
     >
       <div
         style={{
           flex: 1,
-          padding: `${PAD / 2}px ${PAD}px ${PAD}px ${PAD}px`,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
+          padding: `${PAD / 2}px ${PAD}px ${PAD + 72}px ${PAD}px`,
+          display: "grid",
+          gridTemplateColumns: hasIllus ? "1.15fr 1fr" : "1fr",
+          gap: hasIllus ? 72 : 0,
+          alignItems: "center",
+          minHeight: 0,
         }}
       >
-        <h1 style={{ ...TITLE_STYLE, fontSize: 168, color: c.text }}>{title}</h1>
-        {slide.subtitle && (
-          <div
-            style={{
-              marginTop: 32,
-              fontFamily: "'Arimo', sans-serif",
-              fontWeight: 500,
-              fontSize: 36,
-              color: c.text,
-              opacity: 0.72,
-              maxWidth: 1200,
-            }}
-          >
-            {slide.subtitle}
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <RichText
+            as="h1"
+            text={title}
+            iconScale={0.85}
+            style={{ ...TITLE_STYLE, fontSize: hasIllus ? 128 : 168, color: canvas.fg }}
+          />
+          {slide.subtitle && (
+            <div
+              style={{
+                marginTop: 28,
+                fontFamily: "'Arimo', sans-serif",
+                fontWeight: 500,
+                fontSize: 34,
+                color: canvas.fg,
+                opacity: 0.72,
+                maxWidth: 1200,
+              }}
+            >
+              {slide.subtitle}
+            </div>
+          )}
+        </div>
+        {hasIllus && (
+          <div style={{ width: "100%", height: "100%", minHeight: 520, display: "flex" }}>
+            <IllustrationBlock source={slide.illustration ?? null} radius={36} padding={64} />
           </div>
         )}
-      </div>
-      <div
-        style={{
-          padding: `0 ${PAD}px ${PAD / 2}px ${PAD}px`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ ...LABEL_STYLE, color: c.text, opacity: 0.55 }}>stayinsured.de</div>
-        <div style={{ ...LABEL_STYLE, color: c.text, opacity: 0.55 }}>stay ↗</div>
       </div>
     </SlideFrame>
   );

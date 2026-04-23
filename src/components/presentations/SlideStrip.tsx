@@ -8,6 +8,7 @@ interface Props {
   slides: Slide[];
   activeIdx: number;
   c: ColorScheme;
+  canvasMode?: "white" | "tinted";
   setActiveIdx: (idx: number) => void;
   onReorder: (from: number, to: number) => void;
   onAdd: (slide: Slide) => void;
@@ -17,7 +18,9 @@ interface Props {
 const THUMB_W = 180;
 const THUMB_H = Math.round((THUMB_W * SLIDE_HEIGHT) / SLIDE_WIDTH);
 
-export default function SlideStrip({ slides, activeIdx, c, setActiveIdx, onReorder, onAdd, onDelete }: Props) {
+export default function SlideStrip({ slides, activeIdx, c, canvasMode = "tinted", setActiveIdx, onReorder, onAdd, onDelete }: Props) {
+  const useWhite = canvasMode === "white" && c.id !== "dark";
+  const thumbBg = useWhite ? "#FFFFFF" : c.bg;
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
@@ -61,7 +64,7 @@ export default function SlideStrip({ slides, activeIdx, c, setActiveIdx, onReord
               overflow: "hidden",
               cursor: "pointer",
               outline: active ? "3px solid #C3D100" : "1px solid rgba(60,60,60,0.15)",
-              background: c.bg,
+              background: thumbBg,
               opacity: dragIdx === i ? 0.4 : 1,
             }}
             title={`${i + 1}. ${SLIDE_TYPE_LABELS[s.type]}`}
@@ -78,7 +81,7 @@ export default function SlideStrip({ slides, activeIdx, c, setActiveIdx, onReord
                 pointerEvents: "none",
               }}
             >
-              {Slide && <Slide c={c} slide={s} />}
+              {Slide && <Slide c={c} slide={s} canvasMode={canvasMode} pageNumber={i + 1} totalPages={slides.length} />}
             </div>
             <div
               style={{

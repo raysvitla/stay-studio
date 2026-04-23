@@ -20,6 +20,7 @@ function stablePresentation(): Presentation {
     id: "p_ssr_placeholder",
     name: "Untitled deck",
     palette: "lilac",
+    canvasMode: "white",
     slides: [
       defaultSlide("cover"),
       defaultSlide("section"),
@@ -193,7 +194,15 @@ export default function PresentationShell() {
               1920×1080
             </span>
           </div>
-          {activeSlide && <SlideCanvas slide={activeSlide} c={c} />}
+          {activeSlide && (
+            <SlideCanvas
+              slide={activeSlide}
+              c={c}
+              pageNumber={activeIdx + 1}
+              totalPages={presentation.slides.length}
+              canvasMode={presentation.canvasMode ?? "tinted"}
+            />
+          )}
         </div>
         {activeSlide && <SlideInspector slide={activeSlide} onChange={updateSlide} />}
       </div>
@@ -201,6 +210,7 @@ export default function PresentationShell() {
         slides={presentation.slides}
         activeIdx={activeIdx}
         c={c}
+        canvasMode={presentation.canvasMode ?? "tinted"}
         setActiveIdx={setActiveIdx}
         onReorder={reorder}
         onAdd={addSlide}

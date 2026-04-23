@@ -7,6 +7,7 @@ import StatsSlide from "@/components/presentations/slides/StatsSlide";
 import NumberedListSlide from "@/components/presentations/slides/NumberedListSlide";
 import ThreeColSlide from "@/components/presentations/slides/ThreeColSlide";
 import Compare2Slide from "@/components/presentations/slides/Compare2Slide";
+import CompareTableSlide from "@/components/presentations/slides/CompareTableSlide";
 import PhotoHeroSlide from "@/components/presentations/slides/PhotoHeroSlide";
 import ThanksSlide from "@/components/presentations/slides/ThanksSlide";
 
@@ -20,6 +21,7 @@ export const SLIDE_COMPONENTS: Record<SlideType, ComponentType<SlideRenderProps>
   "numbered-list": NumberedListSlide,
   "three-col": ThreeColSlide,
   "compare-2col": Compare2Slide,
+  "compare-table": CompareTableSlide,
   "photo-hero": PhotoHeroSlide,
   thanks: ThanksSlide,
 };
@@ -31,6 +33,7 @@ export const SLIDE_TYPE_LABELS: Record<SlideType, string> = {
   "numbered-list": "Numbered list",
   "three-col": "Three columns",
   "compare-2col": "Comparison (2 col)",
+  "compare-table": "Comparison table",
   "photo-hero": "Photo hero",
   thanks: "Thanks / closing",
 };
@@ -42,6 +45,7 @@ export const SLIDE_TYPE_ORDER: SlideType[] = [
   "numbered-list",
   "three-col",
   "compare-2col",
+  "compare-table",
   "photo-hero",
   "thanks",
 ];
@@ -106,6 +110,24 @@ export function defaultSlide(type: SlideType): Slide {
         left: { title: "GKV · Public", body: "Income-based premiums. Mandatory for most employees. Covers families for free." },
         right: { title: "PKV · Private", body: "Age-based premiums. Better doctor access, more services — but can be expensive later." },
       };
+    case "compare-table":
+      return {
+        ...base,
+        title: "Public vs Private healthcare",
+        table: {
+          columns: ["Public insurance", "Private insurance"],
+          rows: [
+            { label: "Doctor choice", icon: "person", cells: [{ kind: "text", value: "Limited" }, { kind: "text", value: "Free choice" }] },
+            { label: "Wait times", icon: "calendar", cells: [{ kind: "text", value: "Often longer" }, { kind: "text", value: "Usually shorter" }] },
+            { label: "Dental", icon: "tooth", cells: [{ kind: "text", value: "Basic only" }, { kind: "text", value: "Comprehensive" }] },
+            { label: "Family covered", icon: "heart", cells: [{ kind: "check" }, { kind: "cross" }] },
+          ],
+          footer: [
+            { label: "From ~€300 / mo" },
+            { label: "From ~€450 / mo", highlight: true },
+          ],
+        },
+      };
     case "photo-hero":
       return {
         ...base,
@@ -113,6 +135,10 @@ export function defaultSlide(type: SlideType): Slide {
         subtitle: "Real humans. Fast replies. English-first.",
       };
     case "thanks":
-      return { ...base, title: "Thanks for choosing\nand trusting us.", subtitle: "stayinsured.de" };
+      return {
+        ...base,
+        title: "Thanks for {icon:globe} choosing\nand {icon:handshake} trusting us.",
+        subtitle: "stayinsured.de",
+      };
   }
 }

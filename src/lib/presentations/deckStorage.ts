@@ -15,12 +15,20 @@ function migratePalette<T extends { palette: PaletteKey | string }>(p: T): T {
   return p;
 }
 
+/** Decks created before canvasMode existed should keep their full-tinted
+ * background so their look doesn't change retroactively. New decks explicitly
+ * set canvasMode: "white" at creation time. */
+function migrateCanvasMode(p: Presentation): Presentation {
+  if (p.canvasMode === "white" || p.canvasMode === "tinted") return p;
+  return { ...p, canvasMode: "tinted" };
+}
+
 export function loadCurrentPresentation(): Presentation | null {
   if (!isBrowser()) return null;
   try {
     const raw = window.localStorage.getItem(CURRENT_KEY);
     if (!raw) return null;
-    return migratePalette(JSON.parse(raw) as Presentation);
+    return migrateCanvasMode(migratePalette(JSON.parse(raw) as Presentation));
   } catch {
     return null;
   }
@@ -45,7 +53,7 @@ export function listPresentations(): Presentation[] {
   try {
     const raw = window.localStorage.getItem(LIBRARY_KEY);
     if (!raw) return [];
-    return (JSON.parse(raw) as Presentation[]).map(migratePalette);
+    return (JSON.parse(raw) as Presentation[]).map((p) => migrateCanvasMode(migratePalette(p)));
   } catch {
     return [];
   }

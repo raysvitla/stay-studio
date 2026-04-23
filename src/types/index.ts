@@ -110,12 +110,26 @@ export type SlideType =
   | "numbered-list"
   | "three-col"
   | "compare-2col"
+  | "compare-table"
   | "photo-hero"
   | "thanks";
+
+export type SlideIconName =
+  | "clover" | "globe" | "heart" | "handshake" | "arrow-right" | "arrow-up-right"
+  | "check" | "cross" | "person" | "tooth" | "calendar" | "euro" | "house"
+  | "shield" | "phone" | "briefcase";
+
+export type IllustrationId = "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11";
+
+export type IllustrationSource =
+  | { kind: "brand"; id: IllustrationId; accent: string }
+  | { kind: "custom"; dataUrl: string }
+  | null;
 
 export interface SlideItem {
   label: string;
   text: string;
+  icon?: SlideIconName | null;
 }
 
 export interface SlideStat {
@@ -126,11 +140,35 @@ export interface SlideStat {
 export interface SlideColumn {
   title: string;
   body: string;
+  icon?: SlideIconName | null;
 }
 
 export interface SlideCompareSide {
   title: string;
   body: string;
+  icon?: SlideIconName | null;
+}
+
+export type TableCell =
+  | { kind: "text"; value: string; highlight?: boolean }
+  | { kind: "check" }
+  | { kind: "cross" };
+
+export interface TableRow {
+  label: string;
+  icon?: SlideIconName | null;
+  cells: TableCell[];
+}
+
+export interface TableFooterCell {
+  label: string;
+  highlight?: boolean;
+}
+
+export interface SlideTable {
+  columns: string[];
+  rows: TableRow[];
+  footer?: TableFooterCell[] | null;
 }
 
 export interface Slide {
@@ -146,6 +184,8 @@ export interface Slide {
   right?: SlideCompareSide;
   photoUrl?: string | null;
   accentText?: string | null;
+  illustration?: IllustrationSource;
+  table?: SlideTable | null;
 }
 
 export interface Presentation {
@@ -155,9 +195,16 @@ export interface Presentation {
   slides: Slide[];
   createdAt: number;
   updatedAt: number;
+  /** New decks default to "white" (canvas stays white, palette tints accents).
+   * Old decks created before this field was introduced default to "tinted" so
+   * their look doesn't change retroactively. */
+  canvasMode?: "white" | "tinted";
 }
 
 export interface SlideRenderProps {
   c: ColorScheme;
   slide: Slide;
+  pageNumber?: number;
+  totalPages?: number;
+  canvasMode?: "white" | "tinted";
 }
