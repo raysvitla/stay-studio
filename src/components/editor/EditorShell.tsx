@@ -205,7 +205,7 @@ export default function EditorShell() {
   );
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", fontFamily: "'Arimo',sans-serif" }}>
+    <div style={{ display: "flex", height: "100%", overflow: "hidden", fontFamily: "'Arimo',sans-serif" }}>
       <Controls
         design={design}
         setDesign={updater}

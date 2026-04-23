@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Navigation from "@/components/Navigation";
 
 // NOTE on fonts:
 // We load Mukta + Arimo via a <link> tag at runtime rather than next/font so the
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body style={{ margin: 0, display: "flex", flexDirection: "column", height: "100vh" }}>
+        <Navigation />
+        <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+      </body>
     </html>
   );
 }

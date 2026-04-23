@@ -100,3 +100,64 @@ export interface TemplateRenderProps {
   /** For carousel templates — which slide (0-indexed) to render. */
   slideIndex?: number;
 }
+
+// ── Presentations ──────────────────────────────────────────────────────
+
+export type SlideType =
+  | "cover"
+  | "section"
+  | "stats"
+  | "numbered-list"
+  | "three-col"
+  | "compare-2col"
+  | "photo-hero"
+  | "thanks";
+
+export interface SlideItem {
+  label: string;
+  text: string;
+}
+
+export interface SlideStat {
+  value: string;
+  label: string;
+}
+
+export interface SlideColumn {
+  title: string;
+  body: string;
+}
+
+export interface SlideCompareSide {
+  title: string;
+  body: string;
+}
+
+export interface Slide {
+  id: string;
+  type: SlideType;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+  items?: SlideItem[];
+  stats?: SlideStat[];
+  columns?: SlideColumn[];
+  left?: SlideCompareSide;
+  right?: SlideCompareSide;
+  photoUrl?: string | null;
+  accentText?: string | null;
+}
+
+export interface Presentation {
+  id: string;
+  name: string;
+  palette: PaletteKey;
+  slides: Slide[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SlideRenderProps {
+  c: ColorScheme;
+  slide: Slide;
+}
