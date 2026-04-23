@@ -2,12 +2,13 @@
 // Headline + body + CTA pill on one side, illustration panel on the other.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
+  const bs = bodyScale(content.bodySize);
   return (
     <div
       style={{
@@ -47,11 +48,12 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
             <div
               style={{
                 fontFamily: "'Arimo', sans-serif",
-                fontSize: 32,
+                fontSize: 32 * bs,
                 color: c.text,
                 opacity: 0.65,
                 marginTop: 28,
                 lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
               }}
             >
               <RichText text={content.body} />

@@ -9,7 +9,7 @@
 // show headline + body; last slide shows CTA + URL prominently.
 
 import type { TemplateRenderProps, CarouselSlide as Slide } from "@/types";
-import { logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderProps) {
@@ -18,6 +18,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
   const total = slides?.length ?? 1;
   const content = slides?.[idx]?.content ?? state.content;
   const illus = resolveIllustration(content);
+  const bs = bodyScale(content.bodySize);
 
   const isFirst = idx === 0;
   const isLast = total > 1 && idx === total - 1;
@@ -107,10 +108,11 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
           <div
             style={{
               fontFamily: "'Arimo', sans-serif",
-              fontSize: 32,
+              fontSize: 32 * bs,
               color: c.text,
               opacity: 0.7,
               lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
             }}
           >
             <RichText text={content.body} />

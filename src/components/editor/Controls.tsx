@@ -251,6 +251,22 @@ export default function Controls({
                 rows={2}
                 placeholder="Supporting message…"
               />
+              <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center" }}>
+                <div style={{ ...groupLabel, marginBottom: 0, marginRight: 4 }}>Size</div>
+                {(["S", "M", "L"] as const).map((size) => {
+                  const current = editedContent.bodySize ?? "M";
+                  const active = current === size;
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => setContent("bodySize", size)}
+                      style={{ ...styleBtn, flex: "0 0 auto", padding: "6px 14px", ...(active ? styleBtnActive : {}) }}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 

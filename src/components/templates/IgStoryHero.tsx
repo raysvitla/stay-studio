@@ -2,12 +2,13 @@
 // Illustration panel + massive headline + CTA pill. Body is optional.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgStoryHero({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
+  const bs = bodyScale(content.bodySize);
   return (
     <div
       style={{
@@ -71,11 +72,12 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
           <div
             style={{
               fontFamily: "'Arimo', sans-serif",
-              fontSize: 42,
+              fontSize: 42 * bs,
               color: c.text,
               opacity: 0.65,
               marginTop: 40,
               lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
             }}
           >
             <RichText text={content.body} />

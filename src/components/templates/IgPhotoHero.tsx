@@ -4,12 +4,13 @@
 // photo is uploaded.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc } from "@/lib/brand";
+import { bodyScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const photo = content.photoUrl;
+  const bs = bodyScale(content.bodySize);
 
   return (
     <div
@@ -95,11 +96,12 @@ export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
           <div
             style={{
               fontFamily: "'Arimo', sans-serif",
-              fontSize: 28,
+              fontSize: 28 * bs,
               lineHeight: 1.45,
               color: photo ? "rgba(255,255,255,0.9)" : c.text,
               opacity: photo ? 1 : 0.7,
               maxWidth: 820,
+              whiteSpace: "pre-wrap",
             }}
           >
             <RichText text={content.body} />

@@ -2,11 +2,12 @@
 // Big uppercase headline, small body + CTA, URL in corner.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc } from "@/lib/brand";
+import { bodyScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgPostStatement({ c, state }: TemplateRenderProps) {
   const { content } = state;
+  const bs = bodyScale(content.bodySize);
   return (
     <div
       style={{
@@ -53,12 +54,13 @@ export default function IgPostStatement({ c, state }: TemplateRenderProps) {
           <div
             style={{
               fontFamily: "'Arimo', sans-serif",
-              fontSize: 32,
+              fontSize: 32 * bs,
               color: c.text,
               opacity: 0.65,
               lineHeight: 1.5,
               maxWidth: 680,
               marginBottom: 28,
+              whiteSpace: "pre-wrap",
             }}
           >
             <RichText text={content.body} />

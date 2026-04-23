@@ -2,11 +2,12 @@
 // Single panel, large headline centred vertically.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc } from "@/lib/brand";
+import { bodyScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function LiPostBold({ c, state }: TemplateRenderProps) {
   const { content } = state;
+  const bs = bodyScale(content.bodySize);
   return (
     <div
       style={{
@@ -42,11 +43,12 @@ export default function LiPostBold({ c, state }: TemplateRenderProps) {
           <div
             style={{
               fontFamily: "'Arimo', sans-serif",
-              fontSize: 26,
+              fontSize: 26 * bs,
               color: c.text,
               opacity: 0.6,
               marginTop: 20,
               lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
             }}
           >
             <RichText text={content.body} />

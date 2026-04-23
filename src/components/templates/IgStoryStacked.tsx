@@ -2,12 +2,13 @@
 // Top half: illustration on accent colour. Bottom half: text + CTA.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
+  const bs = bodyScale(content.bodySize);
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div
@@ -73,11 +74,12 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
             <div
               style={{
                 fontFamily: "'Arimo', sans-serif",
-                fontSize: 38,
+                fontSize: 38 * bs,
                 color: c.text,
                 opacity: 0.65,
                 marginTop: 36,
                 lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
               }}
             >
               <RichText text={content.body} />

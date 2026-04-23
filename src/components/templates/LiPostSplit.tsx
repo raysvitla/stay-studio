@@ -2,12 +2,13 @@
 // Left: text column. Right: illustration column on accent bg.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function LiPostSplit({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
+  const bs = bodyScale(content.bodySize);
   return (
     <div style={{ width: "100%", height: "100%", background: c.bg, display: "flex", overflow: "hidden" }}>
       <div style={{ flex: 1.1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "52px 56px" }}>
@@ -31,11 +32,12 @@ export default function LiPostSplit({ c, state }: TemplateRenderProps) {
             <div
               style={{
                 fontFamily: "'Arimo', sans-serif",
-                fontSize: 22,
+                fontSize: 22 * bs,
                 color: c.text,
                 opacity: 0.65,
                 marginTop: 18,
                 lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
               }}
             >
               <RichText text={content.body} />

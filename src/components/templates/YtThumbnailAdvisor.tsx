@@ -4,12 +4,13 @@
 // has to be readable at 180×320px when YouTube shrinks the thumbnail.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc } from "@/lib/brand";
+import { bodyScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const photo = content.photoUrl;
+  const bs = bodyScale(content.bodySize);
   return (
     <div
       style={{
@@ -56,11 +57,12 @@ export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
             style={{
               fontFamily: "'Arimo', sans-serif",
               fontWeight: 500,
-              fontSize: 36,
+              fontSize: 36 * bs,
               color: c.text,
               opacity: 0.72,
               marginTop: 20,
               lineHeight: 1.25,
+              whiteSpace: "pre-wrap",
             }}
           >
             <RichText text={content.body} />

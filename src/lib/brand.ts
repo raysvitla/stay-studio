@@ -112,6 +112,14 @@ export function randomColorScheme(): ColorScheme {
   return COLOR_SCHEMES[idx];
 }
 
+/** Multiplier for the optional per-design body-size control.
+ *  Applied by templates to their base body font size. */
+export function bodyScale(size: DesignContent["bodySize"]): number {
+  if (size === "S") return 0.78;
+  if (size === "L") return 1.3;
+  return 1;
+}
+
 /** Type tokens — mirrored from README §Typography. */
 export const TYPE = {
   display: {

@@ -75,6 +75,9 @@ export interface DesignContent {
   stats?: Array<{ value: string; label: string }> | null;
   /** Optional comparison-table data for `compare-table` style. */
   table?: SlideTable | null;
+  /** Body text size multiplier — "S" = 0.78×, "M" = 1× (default), "L" = 1.3×.
+   *  Lets users tighten a list or emphasise a short body without changing templates. */
+  bodySize?: "S" | "M" | "L" | null;
 }
 
 /** A single slide inside a carousel design. Each slide has its own content. */
