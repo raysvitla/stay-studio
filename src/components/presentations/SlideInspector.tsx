@@ -17,7 +17,7 @@ import type {
 } from "@/types";
 import { SLIDE_TYPE_LABELS, SLIDE_TYPE_ORDER } from "@/lib/presentations/slideRegistry";
 import { ILLUSTRATIONS, ILLUSTRATION_ACCENTS, illusSrc } from "@/lib/brand";
-import { ICON_NAMES, ICON_LABELS } from "@/components/brand/Icon";
+import { ICON_NAMES, ICON_LABELS, ICON_KEYWORDS } from "@/components/brand/Icon";
 import Icon from "@/components/brand/Icon";
 
 interface Props {
@@ -342,17 +342,113 @@ export default function SlideInspector({ slide, onChange }: Props) {
   }
 }
 
+function useIconSearch() {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? ICON_NAMES.filter((n) => `${n} ${ICON_LABELS[n]} ${ICON_KEYWORDS[n]}`.toLowerCase().includes(q))
+    : ICON_NAMES;
+  return { query, setQuery, filtered };
+}
+
+const iconSearchInputStyle: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
+  fontSize: 12,
+  padding: "6px 8px",
+  border: "1px solid rgba(60,60,60,0.18)",
+  borderRadius: 6,
+  marginBottom: 6,
+  background: "#FFF",
+};
+
+const iconGridStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 4,
+  maxHeight: 140,
+  overflowY: "auto",
+  padding: 4,
+  border: "1px solid rgba(60,60,60,0.08)",
+  borderRadius: 6,
+  background: "#FAFAFA",
+};
+
 function IconInsertRow({ onPick }: { onPick: (n: SlideIconName) => void }) {
+  const { query, setQuery, filtered } = useIconSearch();
   return (
     <div style={{ marginTop: 8 }}>
       <div style={{ ...label, marginBottom: 4 }}>Insert icon into title</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-        {ICON_NAMES.map((n) => (
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={`Search ${ICON_NAMES.length} icons…`}
+        style={iconSearchInputStyle}
+      />
+      <div style={iconGridStyle}>
+        {filtered.length === 0 ? (
+          <div style={{ fontSize: 11, color: "rgba(60,60,60,0.55)", padding: "6px 4px" }}>
+            No icons match &ldquo;{query}&rdquo;
+          </div>
+        ) : (
+          filtered.map((n) => (
+            <button
+              key={n}
+              type="button"
+              title={ICON_LABELS[n]}
+              onClick={() => onPick(n)}
+              style={{
+                ...btn,
+                padding: 6,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 32,
+                height: 32,
+              }}
+            >
+              <Icon name={n} size={16} />
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function IconPicker({ value, onChange }: { value: SlideIconName | null; onChange: (n: SlideIconName | null) => void }) {
+  const { query, setQuery, filtered } = useIconSearch();
+  return (
+    <div>
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={`Search ${ICON_NAMES.length} icons…`}
+        style={iconSearchInputStyle}
+      />
+      <div style={iconGridStyle}>
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          style={{
+            ...btn,
+            padding: 6,
+            width: 32,
+            height: 32,
+            background: value === null ? "rgba(60,60,60,0.12)" : "#FFF",
+          }}
+          title="None"
+        >
+          —
+        </button>
+        {filtered.map((n) => (
           <button
             key={n}
             type="button"
             title={ICON_LABELS[n]}
-            onClick={() => onPick(n)}
+            onClick={() => onChange(n)}
             style={{
               ...btn,
               padding: 6,
@@ -361,53 +457,13 @@ function IconInsertRow({ onPick }: { onPick: (n: SlideIconName) => void }) {
               justifyContent: "center",
               width: 32,
               height: 32,
+              background: value === n ? "rgba(60,60,60,0.12)" : "#FFF",
             }}
           >
             <Icon name={n} size={16} />
           </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-function IconPicker({ value, onChange }: { value: SlideIconName | null; onChange: (n: SlideIconName | null) => void }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-      <button
-        type="button"
-        onClick={() => onChange(null)}
-        style={{
-          ...btn,
-          padding: 6,
-          width: 32,
-          height: 32,
-          background: value === null ? "rgba(60,60,60,0.12)" : "#FFF",
-        }}
-        title="None"
-      >
-        —
-      </button>
-      {ICON_NAMES.map((n) => (
-        <button
-          key={n}
-          type="button"
-          title={ICON_LABELS[n]}
-          onClick={() => onChange(n)}
-          style={{
-            ...btn,
-            padding: 6,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 32,
-            height: 32,
-            background: value === n ? "rgba(60,60,60,0.12)" : "#FFF",
-          }}
-        >
-          <Icon name={n} size={16} />
-        </button>
-      ))}
     </div>
   );
 }

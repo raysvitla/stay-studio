@@ -9,7 +9,7 @@ import { CATEGORY_LABELS, FORMATS, getFormat, isCarouselFormat } from "@/lib/for
 import { getStyles } from "@/lib/templates";
 import { COLOR_SCHEMES, ILLUSTRATIONS, ILLUSTRATION_ACCENTS, illusSrc } from "@/lib/brand";
 import { deleteDesign, listDesigns, saveDesign } from "@/lib/storage";
-import Icon, { ICON_LABELS, ICON_NAMES, type IconName } from "@/components/brand/Icon";
+import Icon, { ICON_KEYWORDS, ICON_LABELS, ICON_NAMES, type IconName } from "@/components/brand/Icon";
 import Section from "./Section";
 
 const MAX_SLIDES = 10;
@@ -877,6 +877,7 @@ function TextFieldWithIcons({
   placeholder?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+  const [query, setQuery] = useState("");
 
   const insert = (name: IconName) => {
     const token = `{icon:${name}}`;
@@ -895,6 +896,14 @@ function TextFieldWithIcons({
       el.setSelectionRange(pos, pos);
     }, 0);
   };
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? ICON_NAMES.filter((n) => {
+        const hay = `${n} ${ICON_LABELS[n]} ${ICON_KEYWORDS[n]}`.toLowerCase();
+        return hay.includes(q);
+      })
+    : ICON_NAMES;
 
   return (
     <div>
@@ -916,30 +925,56 @@ function TextFieldWithIcons({
           style={inputStyle}
         />
       )}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 6 }}>
-        {ICON_NAMES.map((n) => (
-          <button
-            key={n}
-            type="button"
-            title={`Insert ${ICON_LABELS[n]} icon`}
-            onClick={() => insert(n)}
-            style={{
-              width: 26,
-              height: 26,
-              padding: 0,
-              borderRadius: 5,
-              border: "1px solid rgba(60,60,60,0.12)",
-              background: "#FCFCFC",
-              cursor: "pointer",
-              color: "#3C3C3C",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Icon name={n} size={14} />
-          </button>
-        ))}
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={`Search ${ICON_NAMES.length} icons…`}
+        style={{ ...inputStyle, marginTop: 6, fontSize: 12, padding: "6px 8px" }}
+      />
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 3,
+          marginTop: 6,
+          maxHeight: 120,
+          overflowY: "auto",
+          padding: 2,
+          border: "1px solid rgba(60,60,60,0.08)",
+          borderRadius: 6,
+          background: "#FAFAFA",
+        }}
+      >
+        {filtered.length === 0 ? (
+          <div style={{ fontSize: 11, color: "rgba(60,60,60,0.55)", padding: "6px 4px" }}>
+            No icons match &ldquo;{query}&rdquo;
+          </div>
+        ) : (
+          filtered.map((n) => (
+            <button
+              key={n}
+              type="button"
+              title={`Insert ${ICON_LABELS[n]} icon`}
+              onClick={() => insert(n)}
+              style={{
+                width: 26,
+                height: 26,
+                padding: 0,
+                borderRadius: 5,
+                border: "1px solid rgba(60,60,60,0.12)",
+                background: "#FCFCFC",
+                cursor: "pointer",
+                color: "#3C3C3C",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon name={n} size={14} />
+            </button>
+          ))
+        )}
       </div>
     </div>
   );
