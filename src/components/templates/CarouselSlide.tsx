@@ -5,8 +5,9 @@
 // marketers can see the slide's position when stitching the carousel
 // together.
 //
-// First slide auto-styles as a hook (big headline, no body); middle slides
-// show headline + body; last slide shows CTA + URL prominently.
+// First slide leans into a hook (larger headline, "Swipe →" affordance);
+// last slide surfaces the CTA. Illustrations show on every slide when set —
+// turn off per slide by choosing "none".
 
 import type { TemplateRenderProps, CarouselSlide as Slide } from "@/types";
 import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
@@ -62,7 +63,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
 
       {/* Body — layout varies by slide position */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 40, minHeight: 0 }}>
-        {illus && !isFirst && !isLast && (
+        {illus && (
           <div
             style={{
               background: content.illusAccent || c.accent,
@@ -71,7 +72,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: 360,
+              height: isFirst || isLast ? 280 : 360,
               alignSelf: "stretch",
               overflow: "hidden",
             }}
