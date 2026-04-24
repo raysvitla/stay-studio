@@ -29,6 +29,28 @@ interface RenderedFrame {
   dataUrl: string;
 }
 
+/** Wait for every <img> inside `root` to finish loading (or error out).
+ * Needed because the off-screen render mounts a fresh DOM per frame — unlike
+ * the live preview, nothing has pre-loaded the SVG illustrations. Without
+ * this, `toPng` would snapshot while `<img>` elements are still empty and
+ * bake blank space into the PNG. Each image gets a 2s hard timeout so a
+ * genuinely stuck fetch can't hang the entire export. */
+async function waitForImages(root: HTMLElement): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll("img"));
+  await Promise.all(
+    imgs.map(
+      (img) =>
+        new Promise<void>((res) => {
+          if (img.complete) { res(); return; }
+          const done = () => { clearTimeout(t); res(); };
+          const t = setTimeout(done, 2000);
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", done, { once: true });
+        }),
+    ),
+  );
+}
+
 export interface ExportOptions {
   /** 1 = native size, 2 = retina/HD (default). Caller controls this via the
    * "HD export" toggle in Controls. */
@@ -65,15 +87,18 @@ async function renderFrame(design: Design, slideIndex: number | undefined, pixel
     );
   });
 
-  // Give the browser a frame so fonts/images settle before snapshotting.
-  await new Promise((r) => setTimeout(r, 120));
+  // Wait for illustrations / logos to actually finish loading, then a short
+  // buffer for fonts + layout to settle before snapshotting. The image wait
+  // is the important one — `cacheBust` used to force a second fetch inside
+  // html-to-image and silently time out, leaving blank illustrations.
+  await waitForImages(inner);
+  await new Promise((r) => setTimeout(r, 80));
 
   try {
     const dataUrl = await toPng(inner, {
       width: fmt.w,
       height: fmt.h,
       pixelRatio,
-      cacheBust: true,
     });
     return dataUrl;
   } finally {
