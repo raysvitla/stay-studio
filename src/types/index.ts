@@ -121,10 +121,9 @@ export type SlideType =
   | "photo-hero"
   | "thanks";
 
-export type SlideIconName =
-  | "clover" | "globe" | "heart" | "handshake" | "arrow-right" | "arrow-up-right"
-  | "check" | "cross" | "person" | "tooth" | "calendar" | "euro" | "house"
-  | "shield" | "phone" | "briefcase";
+import type { IconName } from "@/components/brand/Icon";
+
+export type SlideIconName = IconName;
 
 export type IllustrationId = "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11";
 
