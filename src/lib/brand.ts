@@ -26,8 +26,8 @@ export const CHROMATIC = {
 export const COLOR_SCHEMES: ColorScheme[] = [
   { id: "lilac", name: "Lilac", bg: COLORS.lilac, accent: COLORS.yellow, text: COLORS.charcoal, logoVariant: "dark" },
   { id: "yellow", name: "Yellow", bg: COLORS.yellow, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
-  { id: "lime", name: "Lime", bg: COLORS.lime, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "lime" },
-  { id: "blue", name: "Blue", bg: COLORS.blue, accent: COLORS.lime, text: COLORS.charcoal, logoVariant: "blue" },
+  { id: "lime", name: "Lime", bg: COLORS.lime, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
+  { id: "blue", name: "Blue", bg: COLORS.blue, accent: COLORS.lime, text: COLORS.charcoal, logoVariant: "dark" },
   { id: "dark", name: "Dark", bg: COLORS.charcoal, accent: COLORS.lilac, text: COLORS.white, logoVariant: "white" },
   { id: "white", name: "White", bg: COLORS.white, accent: COLORS.lilac, text: COLORS.charcoal, logoVariant: "dark" },
 ];
