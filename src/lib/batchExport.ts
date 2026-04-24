@@ -140,16 +140,33 @@ export async function exportCarousel(design: Design, opts: ExportOptions = {}): 
   if (slides.length === 0) throw new Error("Carousel has no slides");
   const pr = opts.pixelRatio ?? 2;
 
+  // Per-slide try/catch so a single bad slide doesn't nuke the whole export —
+  // marketers would rather get 9 of 10 slides than a "failed: undefined" with
+  // nothing to show.
   const frames: RenderedFrame[] = [];
+  const failed: number[] = [];
   for (let i = 0; i < slides.length; i++) {
-    const dataUrl = await renderFrame(design, i, pr);
-    frames.push({ name: `carousel-${String(i + 1).padStart(2, "0")}.png`, dataUrl });
+    try {
+      const dataUrl = await renderFrame(design, i, pr);
+      frames.push({ name: `carousel-${String(i + 1).padStart(2, "0")}.png`, dataUrl });
+    } catch (err) {
+      failed.push(i + 1);
+      console.warn(`Failed to render carousel slide ${i + 1}:`, err);
+    }
+  }
+
+  if (frames.length === 0) {
+    throw new Error(failed.length ? `All slides failed to render (${failed.join(", ")})` : "No slides rendered");
   }
 
   const zip = new JSZip();
   for (const f of frames) zip.file(f.name, dataUrlToBlob(f.dataUrl));
   const blob = await zip.generateAsync({ type: "blob" });
   triggerDownload(blob, `stay-${slug(design.name)}-carousel.zip`);
+
+  if (failed.length) {
+    window.alert(`Exported ${frames.length}/${slides.length} slides. Failed: ${failed.join(", ")}.`);
+  }
 }
 
 /** Render the current design into EVERY ready format (keeping style mapping

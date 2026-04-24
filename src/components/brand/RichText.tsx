@@ -17,13 +17,17 @@ export default function RichText({ text, style, as = "span", iconScale = 1, ...r
 }
 
 function parseRich(input: string, iconScale: number): ReactNode {
+  // Markdown-ish bullets: lines starting with "- " or "* " render as "• ".
+  // Cleaner than emoji check marks, which read as informal in social ads.
+  const bulletified = input.replace(/^(\s*)[-*]\s+/gm, "$1• ");
+
   const parts: ReactNode[] = [];
   const re = /\{icon:([a-z-]+)\}/gi;
   let last = 0;
   let match: RegExpExecArray | null;
   let idx = 0;
-  while ((match = re.exec(input)) !== null) {
-    if (match.index > last) parts.push(input.slice(last, match.index));
+  while ((match = re.exec(bulletified)) !== null) {
+    if (match.index > last) parts.push(bulletified.slice(last, match.index));
     const name = match[1].toLowerCase();
     if (ICON_SET.has(name)) {
       parts.push(
@@ -39,6 +43,6 @@ function parseRich(input: string, iconScale: number): ReactNode {
     }
     last = match.index + match[0].length;
   }
-  if (last < input.length) parts.push(input.slice(last));
+  if (last < input.length) parts.push(bulletified.slice(last));
   return parts;
 }
