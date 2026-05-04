@@ -2,23 +2,28 @@
 // Left: text column. Right: illustration column on accent bg.
 
 import type { TemplateRenderProps } from "@/types";
-import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function LiPostSplit({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
   return (
     <div style={{ width: "100%", height: "100%", background: c.bg, display: "flex", overflow: "hidden" }}>
       <div style={{ flex: 1.1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "52px 56px" }}>
-        <img src={logoSrc(c.logoVariant)} alt="Stay" style={{ height: 32, objectFit: "contain", alignSelf: "flex-start" }} />
+        {!content.hideLogo ? (
+          <img src={logoSrc(c.logoVariant)} alt="Stay" style={{ height: 32, objectFit: "contain", alignSelf: "flex-start" }} />
+        ) : (
+          <span />
+        )}
         <div>
           <div
             style={{
               fontFamily: "'Mukta', sans-serif",
               fontWeight: 400,
-              fontSize: 68,
+              fontSize: 68 * hs,
               lineHeight: 0.9,
               letterSpacing: "-0.04em",
               textTransform: "uppercase",
@@ -45,7 +50,7 @@ export default function LiPostSplit({ c, state }: TemplateRenderProps) {
           )}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {content.cta && (
+          {content.cta && !content.hideCta && (
             <div
               style={{
                 background: c.text,
@@ -60,9 +65,11 @@ export default function LiPostSplit({ c, state }: TemplateRenderProps) {
               <RichText text={content.cta} />
             </div>
           )}
-          <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 16, color: c.text, opacity: 0.4, marginLeft: "auto" }}>
-            {content.url || "stayinsured.de"}
-          </div>
+          {!content.hideUrl && (
+            <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 16, color: c.text, opacity: 0.4, marginLeft: "auto" }}>
+              {content.url || "stayinsured.de"}
+            </div>
+          )}
         </div>
       </div>
       <div

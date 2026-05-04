@@ -9,7 +9,8 @@ import { CATEGORY_LABELS, FORMATS, getFormat, isCarouselFormat } from "@/lib/for
 import { getStyles } from "@/lib/templates";
 import { COLOR_SCHEMES, ILLUSTRATIONS, ILLUSTRATION_ACCENTS, illusSrc } from "@/lib/brand";
 import { deleteDesign, listDesigns, saveDesign } from "@/lib/storage";
-import Icon, { ICON_LABELS, ICON_NAMES, type IconName } from "@/components/brand/Icon";
+import Icon, { type IconName } from "@/components/brand/Icon";
+import { ICON_BY_CATEGORY } from "@/components/brand/icon-catalog";
 import Section from "./Section";
 
 const MAX_SLIDES = 10;
@@ -105,6 +106,7 @@ export default function Controls({
   const showStatsFields = design.style === "stats";
   const showStatGridEditor = design.style === "stat-grid";
   const showTableEditor = design.style === "compare-table";
+  const showQuoteColors = design.style === "quote";
   const photoLabel = design.style === "photo-hero" ? "Photo" : "Person photo";
 
   return (
@@ -240,6 +242,22 @@ export default function Controls({
               rows={3}
               placeholder="Your headline here…"
             />
+            <div style={{ display: "flex", gap: 4, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ ...groupLabel, marginBottom: 0, marginRight: 4 }}>Size</div>
+              {SIZE_STEPS.map((size) => {
+                const current = editedContent.headlineSize ?? "M";
+                const active = current === size;
+                return (
+                  <button
+                    key={size}
+                    onClick={() => setContent("headlineSize", size)}
+                    style={{ ...sizeStepBtn, ...(active ? styleBtnActive : {}) }}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {showTextFields && (
@@ -251,16 +269,16 @@ export default function Controls({
                 rows={2}
                 placeholder="Supporting message…"
               />
-              <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 4, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <div style={{ ...groupLabel, marginBottom: 0, marginRight: 4 }}>Size</div>
-                {(["S", "M", "L"] as const).map((size) => {
+                {SIZE_STEPS.map((size) => {
                   const current = editedContent.bodySize ?? "M";
                   const active = current === size;
                   return (
                     <button
                       key={size}
                       onClick={() => setContent("bodySize", size)}
-                      style={{ ...styleBtn, flex: "0 0 auto", padding: "6px 14px", ...(active ? styleBtnActive : {}) }}
+                      style={{ ...sizeStepBtn, ...(active ? styleBtnActive : {}) }}
                     >
                       {size}
                     </button>
@@ -346,6 +364,27 @@ export default function Controls({
               ))}
             </div>
           </div>
+
+          {showQuoteColors && (
+            <>
+              <div style={group}>
+                <div style={groupLabel}>Quote mark colour</div>
+                <SwatchPicker
+                  swatches={ILLUSTRATION_ACCENTS}
+                  value={editedContent.quoteMarkColor ?? null}
+                  onChange={(v) => setContent("quoteMarkColor", v)}
+                />
+              </div>
+              <div style={group}>
+                <div style={groupLabel}>Pill background</div>
+                <SwatchPicker
+                  swatches={ILLUSTRATION_ACCENTS}
+                  value={editedContent.quotePillBg ?? null}
+                  onChange={(v) => setContent("quotePillBg", v)}
+                />
+              </div>
+            </>
+          )}
 
           {hasIllustrationAccent && (
             <div style={group}>
@@ -451,6 +490,27 @@ export default function Controls({
               />
             </div>
           )}
+
+          <div style={group}>
+            <div style={groupLabel}>Show on canvas</div>
+            <VisibilityToggle
+              label="Logo"
+              checked={editedContent.hideLogo !== true}
+              onChange={(show) => setContent("hideLogo", show ? undefined : true)}
+            />
+            <VisibilityToggle
+              label="URL / handle"
+              checked={editedContent.hideUrl !== true}
+              onChange={(show) => setContent("hideUrl", show ? undefined : true)}
+            />
+            {showTextFields && (
+              <VisibilityToggle
+                label="CTA button"
+                checked={editedContent.hideCta !== true}
+                onChange={(show) => setContent("hideCta", show ? undefined : true)}
+              />
+            )}
+          </div>
         </Section>
 
         {/* ── EXPORT ─────────────────────────────────────────────── */}
@@ -527,7 +587,9 @@ const formatBtn: React.CSSProperties = {
   borderRadius: 8,
   marginBottom: 4,
   background: "transparent",
-  border: "1.5px solid rgba(60,60,60,0.10)",
+  borderWidth: 1.5,
+  borderStyle: "solid",
+  borderColor: "rgba(60,60,60,0.10)",
   transition: "all 150ms",
   textAlign: "left",
 };
@@ -538,7 +600,9 @@ const styleBtn: React.CSSProperties = {
   flex: "1 1 auto",
   padding: "7px 10px",
   borderRadius: 7,
-  border: "1.5px solid rgba(60,60,60,0.12)",
+  borderWidth: 1.5,
+  borderStyle: "solid",
+  borderColor: "rgba(60,60,60,0.12)",
   background: "transparent",
   cursor: "pointer",
   fontSize: 12,
@@ -547,6 +611,25 @@ const styleBtn: React.CSSProperties = {
   color: "#3C3C3C",
 };
 const styleBtnActive: React.CSSProperties = { background: "#3C3C3C", color: "white", borderColor: "#3C3C3C" };
+
+// Six-step size picker (S → XXXL). Smaller padding than `styleBtn` so
+// six buttons + label fit on one row inside the 320px controls panel.
+const SIZE_STEPS = ["S", "M", "L", "XL", "XXL", "XXXL"] as const;
+const sizeStepBtn: React.CSSProperties = {
+  flex: "0 0 auto",
+  padding: "5px 8px",
+  borderRadius: 6,
+  borderWidth: 1.5,
+  borderStyle: "solid",
+  borderColor: "rgba(60,60,60,0.12)",
+  background: "transparent",
+  cursor: "pointer",
+  fontSize: 11,
+  fontWeight: 600,
+  fontFamily: "'Arimo',sans-serif",
+  color: "#3C3C3C",
+  minWidth: 28,
+};
 const textareaStyle: React.CSSProperties = {
   width: "100%",
   fontFamily: "'Arimo',sans-serif",
@@ -862,9 +945,9 @@ function ImageUploader({
   );
 }
 
-// Text input with a row of insertable `{icon:name}` tokens below.
-// Caret position is preserved so clicking an icon inserts it where the user
-// was typing.
+// Text input with an "Insert icon" button below that opens a searchable
+// catalog popover. Caret position in the field is preserved so the inserted
+// `{icon:NAME}` token lands where the user was typing.
 function TextFieldWithIcons({
   value,
   onChange,
@@ -877,6 +960,7 @@ function TextFieldWithIcons({
   placeholder?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const insert = (name: IconName) => {
     const token = `{icon:${name}}`;
@@ -897,7 +981,7 @@ function TextFieldWithIcons({
   };
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
       {rows > 1 ? (
         <textarea
           ref={ref as React.RefObject<HTMLTextAreaElement>}
@@ -916,32 +1000,179 @@ function TextFieldWithIcons({
           style={inputStyle}
         />
       )}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 6 }}>
-        {ICON_NAMES.map((n) => (
-          <button
-            key={n}
-            type="button"
-            title={`Insert ${ICON_LABELS[n]} icon`}
-            onClick={() => insert(n)}
-            style={{
-              width: 26,
-              height: 26,
-              padding: 0,
-              borderRadius: 5,
-              border: "1px solid rgba(60,60,60,0.12)",
-              background: "#FCFCFC",
-              cursor: "pointer",
-              color: "#3C3C3C",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Icon name={n} size={14} />
-          </button>
-        ))}
+      <div style={{ marginTop: 6 }}>
+        <button
+          type="button"
+          onClick={() => setPickerOpen((v) => !v)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "5px 10px",
+            borderRadius: 6,
+            borderWidth: 1.5,
+            borderStyle: "solid",
+            borderColor: pickerOpen ? "#3C3C3C" : "rgba(60,60,60,0.15)",
+            background: pickerOpen ? "#3C3C3C" : "#FCFCFC",
+            color: pickerOpen ? "#FFF" : "#3C3C3C",
+            cursor: "pointer",
+            fontSize: 11,
+            fontFamily: "'Arimo',sans-serif",
+            fontWeight: 600,
+          }}
+        >
+          <Icon name="sparkles" size={12} />
+          {pickerOpen ? "Close" : "Insert icon"}
+        </button>
       </div>
+      {pickerOpen && (
+        <IconPickerPopover
+          onPick={(n) => {
+            insert(n);
+            setPickerOpen(false);
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+// Popover (~340×320 panel) with search input + categorized icon grid.
+// Anchored beneath the trigger button via absolute positioning.
+function IconPickerPopover({
+  onPick,
+  onClose,
+}: {
+  onPick: (name: IconName) => void;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Auto-focus search box on open.
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Close on Escape, click-outside is handled by an overlay below.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const filteredGroups = ICON_BY_CATEGORY.map(({ category, icons }) => ({
+    category,
+    icons: q
+      ? icons.filter((i) => {
+          // Include category name so "health" finds all Insurance & Health icons,
+          // "money" finds all financial icons, etc.
+          const hay = `${i.name} ${i.label} ${i.keywords ?? ""} ${category}`.toLowerCase();
+          return hay.includes(q);
+        })
+      : icons,
+  })).filter((g) => g.icons.length > 0);
+
+  const totalShown = filteredGroups.reduce((sum, g) => sum + g.icons.length, 0);
+
+  return (
+    <>
+      {/* Click-outside catcher. Sits below the popover. */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 40,
+          background: "transparent",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: "calc(100% + 6px)",
+          left: 0,
+          width: 296,
+          maxHeight: 360,
+          background: "#FFF",
+          border: "1.5px solid rgba(60,60,60,0.15)",
+          borderRadius: 10,
+          boxShadow: "0 8px 24px rgba(60,60,60,0.18)",
+          zIndex: 50,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ padding: 8, borderBottom: "1px solid rgba(60,60,60,0.08)" }}>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search icons…"
+            style={{ ...inputStyle, fontSize: 12, padding: "6px 10px" }}
+          />
+          <div style={{ fontSize: 10, color: "rgba(60,60,60,0.45)", marginTop: 4 }}>
+            {totalShown} {totalShown === 1 ? "icon" : "icons"}
+          </div>
+        </div>
+        <div className="stay-scrollbar" style={{ overflowY: "auto", padding: "6px 8px 10px", flex: 1 }}>
+          {filteredGroups.length === 0 && (
+            <div style={{ fontSize: 11, color: "rgba(60,60,60,0.5)", padding: "16px 4px", textAlign: "center" }}>
+              No icons match &ldquo;{query}&rdquo;.
+            </div>
+          )}
+          {filteredGroups.map(({ category, icons }) => (
+            <div key={category} style={{ marginTop: 8 }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "rgba(60,60,60,0.45)",
+                  marginBottom: 4,
+                  paddingLeft: 2,
+                }}
+              >
+                {category}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 3 }}>
+                {icons.map((i) => (
+                  <button
+                    key={i.name}
+                    type="button"
+                    title={`${i.label} — {icon:${i.name}}`}
+                    onClick={() => onPick(i.name)}
+                    style={{
+                      aspectRatio: "1 / 1",
+                      padding: 0,
+                      borderRadius: 5,
+                      borderWidth: 1,
+                      borderStyle: "solid",
+                      borderColor: "rgba(60,60,60,0.10)",
+                      background: "#FCFCFC",
+                      cursor: "pointer",
+                      color: "#3C3C3C",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon name={i.name} size={15} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -953,6 +1184,84 @@ function CustomIllustrationUploader({
   onChange: (dataUrl: string | null) => void;
 }) {
   return <ImageUploader value={value} onChange={onChange} label="Your custom image" />;
+}
+
+function VisibilityToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3C3C3C", marginBottom: 6, cursor: "pointer" }}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
+  );
+}
+
+// Color swatch picker with a "default / use palette" option (× swatch).
+// Stores the selected hex string, or null to fall back to the current palette.
+function SwatchPicker({
+  swatches,
+  value,
+  onChange,
+}: {
+  swatches: Array<{ id: string; name: string }>;
+  value: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <button
+        onClick={() => onChange(null)}
+        title="Use palette default"
+        aria-label="Use palette default"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 7,
+          background: "transparent",
+          padding: 0,
+          borderWidth: 2.5,
+          borderStyle: "solid",
+          borderColor: value === null ? "#3C3C3C" : "rgba(60,60,60,0.12)",
+          cursor: "pointer",
+          flexShrink: 0,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          color: "rgba(60,60,60,0.5)",
+        }}
+      >
+        ×
+      </button>
+      {swatches.map((s) => (
+        <button
+          key={s.id}
+          onClick={() => onChange(s.id)}
+          title={s.name}
+          aria-label={s.name}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 7,
+            background: s.id,
+            padding: 0,
+            borderWidth: 2.5,
+            borderStyle: "solid",
+            borderColor: value === s.id ? "#3C3C3C" : "rgba(60,60,60,0.12)",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
 // 2×2 editor for the Stat Grid template. Always renders 4 fixed rows.

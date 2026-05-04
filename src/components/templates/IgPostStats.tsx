@@ -2,11 +2,12 @@
 // Huge number + label, rule, supporting headline, CTA + URL.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc } from "@/lib/brand";
+import { headlineScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgPostStats({ c, state }: TemplateRenderProps) {
   const { content } = state;
+  const hs = headlineScale(content.headlineSize);
   return (
     <div
       style={{
@@ -21,11 +22,15 @@ export default function IgPostStats({ c, state }: TemplateRenderProps) {
         overflow: "hidden",
       }}
     >
-      <img
-        src={logoSrc(c.logoVariant)}
-        alt="Stay"
-        style={{ height: 38, objectFit: "contain", alignSelf: "flex-start" }}
-      />
+      {!content.hideLogo ? (
+        <img
+          src={logoSrc(c.logoVariant)}
+          alt="Stay"
+          style={{ height: 38, objectFit: "contain", alignSelf: "flex-start" }}
+        />
+      ) : (
+        <span />
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
         <div
@@ -66,7 +71,7 @@ export default function IgPostStats({ c, state }: TemplateRenderProps) {
           style={{
             fontFamily: "'Mukta', sans-serif",
             fontWeight: 400,
-            fontSize: 72,
+            fontSize: 72 * hs,
             lineHeight: 0.95,
             letterSpacing: "-0.04em",
             textTransform: "uppercase",
@@ -80,14 +85,16 @@ export default function IgPostStats({ c, state }: TemplateRenderProps) {
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        {content.cta && (
+        {content.cta && !content.hideCta && (
           <div style={{ fontFamily: "'Arimo', sans-serif", fontWeight: 700, fontSize: 30, color: c.text }}>
             <RichText text={content.cta} />
           </div>
         )}
-        <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.4, marginLeft: "auto" }}>
-          {content.url || "stayinsured.de"}
-        </div>
+        {!content.hideUrl && (
+          <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.4, marginLeft: "auto" }}>
+            {content.url || "stayinsured.de"}
+          </div>
+        )}
       </div>
     </div>
   );

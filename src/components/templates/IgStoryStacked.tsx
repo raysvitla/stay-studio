@@ -2,13 +2,14 @@
 // Top half: illustration on accent colour. Bottom half: text + CTA.
 
 import type { TemplateRenderProps } from "@/types";
-import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div
@@ -23,11 +24,13 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
           position: "relative",
         }}
       >
-        <img
-          src={logoSrc(c.logoVariant)}
-          alt="Stay"
-          style={{ height: 44, position: "absolute", top: 80, left: 80, objectFit: "contain" }}
-        />
+        {!content.hideLogo && (
+          <img
+            src={logoSrc(c.logoVariant)}
+            alt="Stay"
+            style={{ height: 44, position: "absolute", top: 80, left: 80, objectFit: "contain" }}
+          />
+        )}
         {illus ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
@@ -60,7 +63,7 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
             style={{
               fontFamily: "'Mukta', sans-serif",
               fontWeight: 400,
-              fontSize: 112,
+              fontSize: 112 * hs,
               lineHeight: 0.88,
               letterSpacing: "-0.05em",
               textTransform: "uppercase",
@@ -88,7 +91,7 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
         </div>
 
         <div>
-          {content.cta && (
+          {content.cta && !content.hideCta && (
             <div
               style={{
                 background: c.text,
@@ -105,9 +108,11 @@ export default function IgStoryStacked({ c, state }: TemplateRenderProps) {
               <RichText text={content.cta} />
             </div>
           )}
-          <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 28, color: c.text, opacity: 0.4 }}>
-            {content.url || "stayinsured.de"}
-          </div>
+          {!content.hideUrl && (
+            <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 28, color: c.text, opacity: 0.4 }}>
+              {content.url || "stayinsured.de"}
+            </div>
+          )}
         </div>
       </div>
     </div>

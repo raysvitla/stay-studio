@@ -2,12 +2,13 @@
 // Logo + URL on the left, optional illustration centre, headline on the right.
 
 import type { TemplateRenderProps } from "@/types";
-import { logoSrc, resolveIllustration } from "@/lib/brand";
+import { headlineScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function LiBannerClean({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
+  const hs = headlineScale(content.headlineSize);
   return (
     <div
       style={{
@@ -23,10 +24,14 @@ export default function LiBannerClean({ c, state }: TemplateRenderProps) {
       }}
     >
       <div>
-        <img src={logoSrc(c.logoVariant)} alt="Stay" style={{ height: 44, objectFit: "contain", display: "block", marginBottom: 16 }} />
-        <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.5 }}>
-          {content.url || "stayinsured.de"}
-        </div>
+        {!content.hideLogo && (
+          <img src={logoSrc(c.logoVariant)} alt="Stay" style={{ height: 44, objectFit: "contain", display: "block", marginBottom: 16 }} />
+        )}
+        {!content.hideUrl && (
+          <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.5 }}>
+            {content.url || "stayinsured.de"}
+          </div>
+        )}
       </div>
       <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
         {illus && (
@@ -48,7 +53,7 @@ export default function LiBannerClean({ c, state }: TemplateRenderProps) {
           style={{
             fontFamily: "'Mukta', sans-serif",
             fontWeight: 400,
-            fontSize: 64,
+            fontSize: 64 * hs,
             lineHeight: 0.9,
             letterSpacing: "-0.04em",
             textTransform: "uppercase",

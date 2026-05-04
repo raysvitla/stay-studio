@@ -117,6 +117,21 @@ export function randomColorScheme(): ColorScheme {
 export function bodyScale(size: DesignContent["bodySize"]): number {
   if (size === "S") return 0.78;
   if (size === "L") return 1.3;
+  if (size === "XL") return 1.65;
+  if (size === "XXL") return 2.05;
+  if (size === "XXXL") return 2.5;
+  return 1;
+}
+
+/** Multiplier for the optional per-design headline-size control.
+ *  Tighter step than body — headlines are already large, so even a small bump
+ *  goes a long way. XL+ will overflow on long copy; trust the user to dial back. */
+export function headlineScale(size: DesignContent["headlineSize"]): number {
+  if (size === "S") return 0.82;
+  if (size === "L") return 1.18;
+  if (size === "XL") return 1.38;
+  if (size === "XXL") return 1.6;
+  if (size === "XXXL") return 1.85;
   return 1;
 }
 

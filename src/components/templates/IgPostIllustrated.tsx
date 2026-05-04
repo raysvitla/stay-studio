@@ -2,13 +2,14 @@
 // Headline + body + CTA pill on one side, illustration panel on the other.
 
 import type { TemplateRenderProps } from "@/types";
-import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
   return (
     <div
       style={{
@@ -22,11 +23,13 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
         overflow: "hidden",
       }}
     >
-      <img
-        src={logoSrc(c.logoVariant)}
-        alt="Stay"
-        style={{ height: 38, width: "auto", objectFit: "contain", alignSelf: "flex-start", marginBottom: 56 }}
-      />
+      {!content.hideLogo && (
+        <img
+          src={logoSrc(c.logoVariant)}
+          alt="Stay"
+          style={{ height: 38, width: "auto", objectFit: "contain", alignSelf: "flex-start", marginBottom: 56 }}
+        />
+      )}
 
       <div style={{ display: "flex", flex: 1, gap: 56, alignItems: "center", minHeight: 0 }}>
         <div style={{ flex: 1.2, display: "flex", flexDirection: "column", justifyContent: "center" }}>
@@ -34,7 +37,7 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
             style={{
               fontFamily: "'Mukta', sans-serif",
               fontWeight: 400,
-              fontSize: 96,
+              fontSize: 96 * hs,
               lineHeight: 0.9,
               letterSpacing: "-0.05em",
               textTransform: "uppercase",
@@ -59,7 +62,7 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
               <RichText text={content.body} />
             </div>
           )}
-          {content.cta && (
+          {content.cta && !content.hideCta && (
             <div
               style={{
                 marginTop: 40,
@@ -104,18 +107,20 @@ export default function IgPostIllustrated({ c, state }: TemplateRenderProps) {
         )}
       </div>
 
-      <div
-        style={{
-          fontFamily: "'Arimo', sans-serif",
-          fontSize: 22,
-          color: c.text,
-          opacity: 0.4,
-          marginTop: 32,
-          textAlign: "right",
-        }}
-      >
-        {content.url || "stayinsured.de"}
-      </div>
+      {!content.hideUrl && (
+        <div
+          style={{
+            fontFamily: "'Arimo', sans-serif",
+            fontSize: 22,
+            color: c.text,
+            opacity: 0.4,
+            marginTop: 32,
+            textAlign: "right",
+          }}
+        >
+          {content.url || "stayinsured.de"}
+        </div>
+      )}
     </div>
   );
 }

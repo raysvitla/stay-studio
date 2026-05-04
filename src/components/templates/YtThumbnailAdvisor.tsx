@@ -4,13 +4,14 @@
 // has to be readable at 180×320px when YouTube shrinks the thumbnail.
 
 import type { TemplateRenderProps } from "@/types";
-import { bodyScale, logoSrc } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const photo = content.photoUrl;
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
   return (
     <div
       style={{
@@ -32,16 +33,18 @@ export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
           minWidth: 0,
         }}
       >
-        <img
-          src={logoSrc(c.logoVariant)}
-          alt="Stay"
-          style={{ height: 34, width: "auto", objectFit: "contain", alignSelf: "flex-start", marginBottom: 24 }}
-        />
+        {!content.hideLogo && (
+          <img
+            src={logoSrc(c.logoVariant)}
+            alt="Stay"
+            style={{ height: 34, width: "auto", objectFit: "contain", alignSelf: "flex-start", marginBottom: 24 }}
+          />
+        )}
         <div
           style={{
             fontFamily: "'Mukta', sans-serif",
             fontWeight: 400,
-            fontSize: 112,
+            fontSize: 112 * hs,
             lineHeight: 0.9,
             letterSpacing: "-0.04em",
             textTransform: "uppercase",
@@ -68,7 +71,7 @@ export default function YtThumbnailAdvisor({ c, state }: TemplateRenderProps) {
             <RichText text={content.body} />
           </div>
         )}
-        {content.url && (
+        {content.url && !content.hideUrl && (
           <div
             style={{
               fontFamily: "'Arimo', sans-serif",
