@@ -75,9 +75,25 @@ export interface DesignContent {
   stats?: Array<{ value: string; label: string }> | null;
   /** Optional comparison-table data for `compare-table` style. */
   table?: SlideTable | null;
-  /** Body text size multiplier — "S" = 0.78×, "M" = 1× (default), "L" = 1.3×.
+  /** Body text size multiplier. See `bodyScale()` for the per-step multipliers.
    *  Lets users tighten a list or emphasise a short body without changing templates. */
-  bodySize?: "S" | "M" | "L" | null;
+  bodySize?: "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | null;
+  /** Headline size multiplier. See `headlineScale()` for the per-step multipliers.
+   *  Lets users punch up short headlines or fit longer ones without overflow. */
+  headlineSize?: "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | null;
+  /** When true, the Stay logo is hidden in the rendered template. */
+  hideLogo?: boolean;
+  /** When true, the URL / handle line is hidden in the rendered template. */
+  hideUrl?: boolean;
+  /** When true, the CTA pill is hidden even if `cta` text is set.
+   *  (Clearing `cta` also hides it; this lets users pre-fill copy and toggle visibility.) */
+  hideCta?: boolean;
+  /** Optional override for the giant opening-quote glyph in the Quote layout.
+   *  Hex string. When unset, falls back to the palette's accent colour. */
+  quoteMarkColor?: string | null;
+  /** Optional override for the attribution-pill background in the Quote layout.
+   *  Hex string. When unset, falls back to the palette's accent colour. */
+  quotePillBg?: string | null;
 }
 
 /** A single slide inside a carousel design. Each slide has its own content. */
@@ -121,10 +137,10 @@ export type SlideType =
   | "photo-hero"
   | "thanks";
 
-export type SlideIconName =
-  | "clover" | "globe" | "heart" | "handshake" | "arrow-right" | "arrow-up-right"
-  | "check" | "cross" | "person" | "tooth" | "calendar" | "euro" | "house"
-  | "shield" | "phone" | "briefcase";
+/** Kebab-case icon identifier from the central catalog (`icon-catalog.ts`).
+ *  Loose-typed `string` so we don't have to mirror the catalog here every time
+ *  it grows. Validation happens at render time via `ICON_BY_NAME`. */
+export type SlideIconName = string;
 
 export type IllustrationId = "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11";
 

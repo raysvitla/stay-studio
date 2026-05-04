@@ -2,13 +2,14 @@
 // Illustration panel + massive headline + CTA pill. Body is optional.
 
 import type { TemplateRenderProps } from "@/types";
-import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgStoryHero({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const illus = resolveIllustration(content);
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
   return (
     <div
       style={{
@@ -22,11 +23,13 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
         overflow: "hidden",
       }}
     >
-      <img
-        src={logoSrc(c.logoVariant)}
-        alt="Stay"
-        style={{ height: 48, objectFit: "contain", alignSelf: "flex-start" }}
-      />
+      {!content.hideLogo && (
+        <img
+          src={logoSrc(c.logoVariant)}
+          alt="Stay"
+          style={{ height: 48, objectFit: "contain", alignSelf: "flex-start" }}
+        />
+      )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {illus && (
@@ -58,7 +61,7 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
           style={{
             fontFamily: "'Mukta', sans-serif",
             fontWeight: 400,
-            fontSize: 128,
+            fontSize: 128 * hs,
             lineHeight: 0.88,
             letterSpacing: "-0.05em",
             textTransform: "uppercase",
@@ -86,7 +89,7 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
       </div>
 
       <div>
-        {content.cta && (
+        {content.cta && !content.hideCta && (
           <div
             style={{
               background: c.text,
@@ -103,9 +106,11 @@ export default function IgStoryHero({ c, state }: TemplateRenderProps) {
             <RichText text={content.cta} />
           </div>
         )}
-        <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 30, color: c.text, opacity: 0.4 }}>
-          {content.url || "stayinsured.de"}
-        </div>
+        {!content.hideUrl && (
+          <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 30, color: c.text, opacity: 0.4 }}>
+            {content.url || "stayinsured.de"}
+          </div>
+        )}
       </div>
     </div>
   );

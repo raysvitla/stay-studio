@@ -10,7 +10,7 @@
 // turn off per slide by choosing "none".
 
 import type { TemplateRenderProps, CarouselSlide as Slide } from "@/types";
-import { bodyScale, logoSrc, resolveIllustration } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc, resolveIllustration } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderProps) {
@@ -20,6 +20,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
   const content = slides?.[idx]?.content ?? state.content;
   const illus = resolveIllustration(content);
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
 
   const isFirst = idx === 0;
   const isLast = total > 1 && idx === total - 1;
@@ -40,11 +41,15 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
     >
       {/* Header row: logo + slide indicator */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <img
-          src={logoSrc(c.logoVariant)}
-          alt="Stay"
-          style={{ height: 38, objectFit: "contain" }}
-        />
+        {!content.hideLogo ? (
+          <img
+            src={logoSrc(c.logoVariant)}
+            alt="Stay"
+            style={{ height: 38, objectFit: "contain" }}
+          />
+        ) : (
+          <span />
+        )}
         {total > 1 && (
           <div
             style={{
@@ -94,7 +99,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
           style={{
             fontFamily: "'Mukta', sans-serif",
             fontWeight: 400,
-            fontSize: isFirst ? 128 : 88,
+            fontSize: (isFirst ? 128 : 88) * hs,
             lineHeight: 0.9,
             letterSpacing: "-0.05em",
             textTransform: "uppercase",
@@ -123,7 +128,7 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
 
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24 }}>
-        {isLast && content.cta ? (
+        {isLast && content.cta && !content.hideCta ? (
           <div
             style={{
               background: c.text,
@@ -154,9 +159,11 @@ export default function CarouselSlide({ c, state, slideIndex }: TemplateRenderPr
         ) : (
           <span />
         )}
-        <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.4, marginLeft: "auto" }}>
-          {content.url || "stayinsured.de"}
-        </div>
+        {!content.hideUrl && (
+          <div style={{ fontFamily: "'Arimo', sans-serif", fontSize: 22, color: c.text, opacity: 0.4, marginLeft: "auto" }}>
+            {content.url || "stayinsured.de"}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@
 
 import type { CSSProperties } from "react";
 import type { SlideIconName, TableCell, TemplateRenderProps } from "@/types";
-import { logoSrc } from "@/lib/brand";
+import { headlineScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 import Icon from "@/components/brand/Icon";
 
@@ -28,6 +28,7 @@ export default function IgCompareTable({ c, state }: TemplateRenderProps) {
   const table = content.table ?? DEFAULT_TABLE;
   const colCount = table.columns.length;
   const gridTemplate = `minmax(200px, 1.1fr) ${"1fr ".repeat(Math.max(1, colCount)).trim()}`;
+  const hs = headlineScale(content.headlineSize);
 
   return (
     <div
@@ -44,14 +45,18 @@ export default function IgCompareTable({ c, state }: TemplateRenderProps) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <img src={logoSrc(c.logoVariant)} alt="Stay" style={{ height: 40, objectFit: "contain" }} />
+        {!content.hideLogo ? (
+          <img src={logoSrc(c.logoVariant)} alt="Stay" style={{ height: 40, objectFit: "contain" }} />
+        ) : (
+          <span />
+        )}
       </div>
 
       <div
         style={{
           fontFamily: "'Mukta', sans-serif",
           fontWeight: 400,
-          fontSize: 64,
+          fontSize: 64 * hs,
           lineHeight: 0.95,
           letterSpacing: "-0.04em",
           textTransform: "uppercase",
@@ -127,7 +132,7 @@ export default function IgCompareTable({ c, state }: TemplateRenderProps) {
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24 }}>
-        {content.cta ? (
+        {content.cta && !content.hideCta ? (
           <div
             style={{
               background: c.text,
@@ -144,17 +149,19 @@ export default function IgCompareTable({ c, state }: TemplateRenderProps) {
         ) : (
           <span />
         )}
-        <div
-          style={{
-            fontFamily: "'Arimo', sans-serif",
-            fontSize: 18,
-            color: c.text,
-            opacity: 0.4,
-            marginLeft: "auto",
-          }}
-        >
-          {content.url || "stayinsured.de"}
-        </div>
+        {!content.hideUrl && (
+          <div
+            style={{
+              fontFamily: "'Arimo', sans-serif",
+              fontSize: 18,
+              color: c.text,
+              opacity: 0.4,
+              marginLeft: "auto",
+            }}
+          >
+            {content.url || "stayinsured.de"}
+          </div>
+        )}
       </div>
     </div>
   );

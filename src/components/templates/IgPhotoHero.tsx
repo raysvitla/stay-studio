@@ -4,13 +4,14 @@
 // photo is uploaded.
 
 import type { TemplateRenderProps } from "@/types";
-import { bodyScale, logoSrc } from "@/lib/brand";
+import { bodyScale, headlineScale, logoSrc } from "@/lib/brand";
 import RichText from "@/components/brand/RichText";
 
 export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
   const { content } = state;
   const photo = content.photoUrl;
   const bs = bodyScale(content.bodySize);
+  const hs = headlineScale(content.headlineSize);
 
   return (
     <div
@@ -57,11 +58,13 @@ export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
           alignItems: "center",
         }}
       >
-        <img
-          src={photo ? logoSrc("white") : logoSrc(c.logoVariant)}
-          alt="Stay"
-          style={{ height: 42, objectFit: "contain" }}
-        />
+        {!content.hideLogo && (
+          <img
+            src={photo ? logoSrc("white") : logoSrc(c.logoVariant)}
+            alt="Stay"
+            style={{ height: 42, objectFit: "contain" }}
+          />
+        )}
       </div>
 
       {/* Footer — headline + body + CTA + URL */}
@@ -82,7 +85,7 @@ export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
           style={{
             fontFamily: "'Mukta', sans-serif",
             fontWeight: 400,
-            fontSize: 108,
+            fontSize: 108 * hs,
             letterSpacing: "-0.05em",
             textTransform: "uppercase",
             lineHeight: 0.95,
@@ -109,7 +112,7 @@ export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24, marginTop: 4 }}>
-          {content.cta ? (
+          {content.cta && !content.hideCta ? (
             <div
               style={{
                 background: photo ? "#FFF" : c.text,
@@ -127,17 +130,19 @@ export default function IgPhotoHero({ c, state }: TemplateRenderProps) {
           ) : (
             <span />
           )}
-          <div
-            style={{
-              fontFamily: "'Arimo', sans-serif",
-              fontSize: 20,
-              color: photo ? "rgba(255,255,255,0.75)" : c.text,
-              opacity: photo ? 1 : 0.45,
-              marginLeft: "auto",
-            }}
-          >
-            {content.url || "stayinsured.de"}
-          </div>
+          {!content.hideUrl && (
+            <div
+              style={{
+                fontFamily: "'Arimo', sans-serif",
+                fontSize: 20,
+                color: photo ? "rgba(255,255,255,0.75)" : c.text,
+                opacity: photo ? 1 : 0.45,
+                marginLeft: "auto",
+              }}
+            >
+              {content.url || "stayinsured.de"}
+            </div>
+          )}
         </div>
       </div>
     </div>
